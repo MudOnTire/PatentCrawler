@@ -1,0 +1,15 @@
+{
+  "name": "PatentCrawler",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "zhangjianyang",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.16.2",
+    "express-handlebars": "^3.0.0",
+    "handlebars": "^4.0.11",
+    "mysql": "^2.15.0",
+    "nightmare": "^2.10.0",
+    "node-fs": "^0.1.7"
+  }
+}
