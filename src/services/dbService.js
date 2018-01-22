@@ -1,4 +1,6 @@
 const mysql = require("mysql");
+const College = require("../models/college");
+const Patent = require("../models/patent");
 
 function createUrl(patentId, token) {
     const protocol = "http:";
@@ -32,12 +34,20 @@ DBService.prototype.connect = function (callback) {
 DBService.prototype.getAllColleges = function (callback) {
     var connection = this.connection;
     connection.query({
-        sql: "select college_name from up_college where id = ?",
-        values: [1]
+        sql: "select id,college_name from up_college"
     }, function (error, result, fields) {
-        console.log(fields);
+        const colleges = result.map((college, index)=>{
+            return new College(college["id"], college["college_name"]);
+        });
+        callback(colleges);
     });
 }
 
-module.exports = DBService;
+// DBService.prototype.getPatentsOfCollege = function (collegeId, callback) {
+//     var connection = this.connection;
+//     connection.query({
+//         sql: "select "
+//     })
+// }
 
+module.exports = DBService;
