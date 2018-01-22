@@ -1,4 +1,12 @@
-var mysql = require("mysql");
+const mysql = require("mysql");
+
+function createUrl(patentId, token) {
+    const protocol = "http:";
+    const hostname = "cpquery.sipo.gov.cn";
+    const pathname = "/txnQueryFeeData.do";
+    const result = `${protocol}//${hostname}${pathname}?select-key:shenqingh=${patentId}&token=${token}`;
+    return result;
+}
 
 function DBService() {
     this.connection = mysql.createConnection({
@@ -32,3 +40,4 @@ DBService.prototype.getAllColleges = function (callback) {
 }
 
 module.exports = DBService;
+
