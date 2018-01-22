@@ -4,34 +4,58 @@ const Patent = require("../models/patent");
 
 //Constructor
 function DBService() {
-    this.connection = mysql.createConnection({
+    this.ipTpConnection = mysql.createConnection({
         host: '192.168.20.14',
         port: '3306',
         user: 'iptp',
         password: 'Cnuip1109',
         database: 'iptp'
     });
+    this.localConnection = mysql.createConnection({
+        host: 'localhost',
+        port: '3306',
+        user: 'iptp',
+        password: 'Cnuip1109',
+        database: 'patentfee'
+    });
 }
 
-//连接数据库
-DBService.prototype.connect = function () {
-    const connection = this.connection;
+//连接中高平台数据库
+DBService.prototype.connectIptp = function () {
+    const connection = this.ipTpConnection;
     return new Promise((resolve, reject) => {
         connection.connect(function (err) {
             if (err) {
-                console.error("error connection: " + err.stack);
+                console.error("iptp error connection: " + err.stack);
                 reject();
                 return;
             }
-            console.log("connected to mysql!");
+            console.log("connected to iptp mysql!");
             resolve();
         });
     });
 }
 
+//连接本地数据库
+DBService.prototype.connectLocal = function () {
+    const connection = this.localConnection;
+    return new Promise((resolve, reject) => {
+        connection.connect(function (err) {
+            if (err) {
+                console.error("local error connection: " + err.stack);
+                reject();
+                return;
+            }
+            console.log("connected to local mysql!");
+            resolve();
+        });
+    });
+}
+
+
 //获取所有大学
 DBService.prototype.getAllColleges = function () {
-    const connection = this.connection;
+    const connection = this.ipTpConnection;
     return new Promise((resolve, reject) => {
         connection.query({
             sql: "select id,college_name,storage_id from up_college"
@@ -49,7 +73,7 @@ DBService.prototype.getAllColleges = function () {
 
 //获取大学的所有非无效专利
 DBService.prototype.getPatentsOfCollege = function (collegeStorageId) {
-    const connection = this.connection;
+    const connection = this.ipTpConnection;
     return new Promise((resolve, reject) => {
         connection.query({
             sql: `select distinct p.IDPATENT, p.AD, p.TI, p.AN, p.PA, p.PIN, p.LASTLEGALSTATUS, p.PNM, p.PATTYPE \
@@ -68,4 +92,52 @@ DBService.prototype.getPatentsOfCollege = function (collegeStorageId) {
         });
     });
 }
+
+//获取指定patent的future fee记录
+DBService.prototype.getFutureFeeOfPatent = function (patentId) {
+    const connection = this.localConnection;
+    return new Promise((resolve, reject) => {
+        connection.query({
+            sql: `select * from future_fee where patent_id=${patentId}`
+        }, function (error, result, fields) {
+            if (error) {
+                reject(error);
+            }
+            resolve(result);
+        })
+    });
+}
+
+//删除一条制定的future fee记录
+DBService.prototype.deleteFutureFeeOfPatent = function (patentId) {
+    const connection = this.localConnection;
+    return new Promise((resolve, reject) => {
+        connection.query({
+            sql: `delete from future_fee where patent_id = ${patentId}`
+        }, function (error, result, fields) {
+            if (error) {
+                reject(error);
+            }
+            resolve(result);
+        })
+    });
+}
+
+//插入一条或修改已有专利对应的future fee记录
+DBService.prototype.createPatentFutureFee = function (patentId, patentApplyNumber, patentTitle, futureFees) {
+    const connection = this.localConnection;
+    return new Promise((resolve, reject) => {
+        const feeString = JSON.stringify(futureFees);
+        connection.query({
+            sql: `insert into future_fee (patent_id, patent_apply_number, patent_title, future_fee) \
+            values('${patentId}', '${patentApplyNumber}' ,'${patentTitle}' ,'${feeString}')`
+        }, function (error, result, fields) {
+            if (error) {
+                reject(error);
+            }
+            resolve(result);
+        });
+    });
+}
+
 module.exports = DBService;
