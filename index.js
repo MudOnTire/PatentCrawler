@@ -8,6 +8,22 @@ const patentCrawler = new PatentCrawler();
 
 const token = "69892E823FC94491B58A6D17682BDE69";
 
+async function reGenerateTasks() {
+    await dbService.connectIptp();
+    await dbService.connectLocal();
+    await dbService.deleteAllPatentTasks();
+    let colleges = await dbService.getAllColleges();
+    for (let i = 0; i < colleges.length; i++) {
+        let college = colleges[i];
+        let patents = await dbService.getPatentsOfCollege(college.storageId);
+        console.log(`${college.name}: ${patents.length} tasks`)
+        for (let j = 0; j < patents.length; j++) {
+            let patent = patents[j];
+            await dbService.createPatentTask(patent);
+        }
+    }
+}
+
 async function start() {
     await dbService.connectIptp();
     await dbService.connectLocal();
@@ -30,4 +46,5 @@ async function start() {
     }
 }
 
-start();
+// start();
+reGenerateTasks()

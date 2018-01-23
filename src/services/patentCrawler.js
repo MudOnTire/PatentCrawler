@@ -25,6 +25,7 @@ function getRandomUserAgent() {
     return userAgents[r];
 }
 
+//随机生成一个IP
 function getRandomIP() {
     const ip = `${getRandomInt(20, 255)}.${getRandomInt(20, 255)}.${getRandomInt(20, 255)}.${getRandomInt(20, 255)}`;
     return ip;

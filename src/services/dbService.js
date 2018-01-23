@@ -79,8 +79,9 @@ DBService.prototype.getPatentsOfCollege = function (collegeStorageId) {
             sql: `select distinct p.IDPATENT, p.AD, p.TI, p.AN, p.PA, p.PIN, p.LASTLEGALSTATUS, p.PNM, p.PATTYPE \
                 from iptp.st_patentinfo p \
                 left join iptp.up_patent_storage ps on ps.patent_id=p.IDPATENT \
-                where ps.storage_id = ${collegeStorageId} and p.LASTLEGALSTATUS != "无效" \
-                order by p.IDPATENT`
+                where ps.storage_id = ? and p.LASTLEGALSTATUS != "无效" \
+                order by p.IDPATENT`,
+            values: [collegeStorageId]
         }, function (error, result, fields) {
             if (error) {
                 reject(error);
@@ -93,12 +94,15 @@ DBService.prototype.getPatentsOfCollege = function (collegeStorageId) {
     });
 }
 
+//future_fee
+
 //获取指定patent的future fee记录
 DBService.prototype.getFutureFeeOfPatent = function (patentId) {
     const connection = this.localConnection;
     return new Promise((resolve, reject) => {
         connection.query({
-            sql: `select * from future_fee where patent_id=${patentId}`
+            sql: `select * from future_fee where patent_id = ?`,
+            values: [patentId]
         }, function (error, result, fields) {
             if (error) {
                 reject(error);
@@ -108,12 +112,13 @@ DBService.prototype.getFutureFeeOfPatent = function (patentId) {
     });
 }
 
-//删除一条制定的future fee记录
+//删除一条指定的future fee记录
 DBService.prototype.deleteFutureFeeOfPatent = function (patentId) {
     const connection = this.localConnection;
     return new Promise((resolve, reject) => {
         connection.query({
-            sql: `delete from future_fee where patent_id = ${patentId}`
+            sql: `delete from future_fee where patent_id = ?`,
+            values: [patentId]
         }, function (error, result, fields) {
             if (error) {
                 reject(error);
@@ -123,14 +128,78 @@ DBService.prototype.deleteFutureFeeOfPatent = function (patentId) {
     });
 }
 
-//插入一条或修改已有专利对应的future fee记录
+//插入一条专利对应的future fee记录
 DBService.prototype.createPatentFutureFee = function (patentId, patentApplyNumber, patentTitle, futureFees) {
     const connection = this.localConnection;
     return new Promise((resolve, reject) => {
         const feeString = JSON.stringify(futureFees);
         connection.query({
-            sql: `insert into future_fee (patent_id, patent_apply_number, patent_title, future_fee) \
-            values('${patentId}', '${patentApplyNumber}' ,'${patentTitle}' ,'${feeString}')`
+            sql: `insert into future_fee (patent_id, patent_apply_number, patent_title, future_fee) values(?, ?, ?, ?)`,
+            values: [patentId, patentApplyNumber, patentTitle, feeString]
+        }, function (error, result, fields) {
+            if (error) {
+                reject(error);
+            }
+            resolve(result);
+        });
+    });
+}
+
+//patent_task
+
+//获取所有的patent_task
+DBService.prototype.getAllPatentTasks = function () {
+    const connection = this.localConnection;
+    return new Promise((resolve, reject) => {
+        connection.query({
+            sql: `select * from patent_task where is_done = 0`
+        }, function (error, result, fields) {
+            if (error) {
+                reject(error);
+            }
+            resolve(result);
+        });
+    });
+}
+
+//删除所有的patent_task
+DBService.prototype.deleteAllPatentTasks = function () {
+    const connection = this.localConnection;
+    return new Promise((resolve, reject) => {
+        connection.query({
+            sql: `TRUNCATE TABLE patent_task`
+        }, function (error, result, fields) {
+            if (error) {
+                reject(error);
+            }
+            resolve(result);
+        });
+    });
+}
+
+//插入一条新patent_task任务记录
+DBService.prototype.createPatentTask = function (patent) {
+    const connection = this.localConnection;
+    return new Promise((resolve, reject) => {
+        connection.query({
+            sql: `insert into patent_task (patent_id, patent_apply_number, patent_title, is_done) values(?, ?, ?, ?)`,
+            values: [patent.id, patent.applyNum, patent.name, 0]
+        }, function (error, result, fields) {
+            if (error) {
+                reject(error);
+            }
+            resolve(result);
+        });
+    });
+}
+
+//完成一个patent_task任务
+DBService.prototype.donePatentTask = function (taskId) {
+    const connection = this.localConnection;
+    return new Promise((resolve, reject) => {
+        connection.query({
+            sql: `update patent_task set is_done = 1 where id = ?`,
+            values: [taskId]
         }, function (error, result, fields) {
             if (error) {
                 reject(error);
