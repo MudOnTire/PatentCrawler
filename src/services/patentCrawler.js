@@ -44,7 +44,7 @@ Crawler.prototype.getFeeOfPatent = function (applyNumber, token) {
             .useragent(getRandomUserAgent())
             .goto(url, { "X-Forwarded-For": getRandomIP() })
             .wait("#djfid")
-            .wait(getRandomInt(200, 500))
+            .wait(getRandomInt(300, 600))
             .evaluate(() => {
                 const trs = document.querySelectorAll('#djfid table tr');
                 let futureFees = [];

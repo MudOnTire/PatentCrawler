@@ -6,7 +6,7 @@ const FutureFee = require('./src/models/futureFee');
 const dbService = new DBService();
 const patentCrawler = new PatentCrawler();
 
-const token = "D4E5B82DE475478FACDCF654931C48D3";
+const token = "0D7B6496F30443A682F990D4CFA2771D";
 
 //生成所有的任务
 async function reGenerateTasks() {
