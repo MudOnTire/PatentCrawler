@@ -1,12 +1,14 @@
 const DBService = require('./src/services/dbService');
-const patentUtil = require('./src/utils/patentUtil');
+const OCRService = require('./src/services/ocrService');
 const PatentCrawler = require('./src/services/patentCrawler');
+const patentUtil = require('./src/utils/patentUtil');
 const FutureFee = require('./src/models/futureFee');
 
 const dbService = new DBService();
+const ocrService = new OCRService();
 const patentCrawler = new PatentCrawler();
 
-const token = "9C02544B9BD64C00BDB2C621DDDC8AEC";
+const token = "C00D909B92844C4285E26AA9881ED4BE";
 
 //生成所有的任务
 async function reGenerateTasks() {
@@ -50,5 +52,9 @@ async function start() {
     console.log("All tasks done!!!");
 }
 
-start();
-// reGenerateTasks();
+// start();
+// reGenerateTasks(); 
+ocrService.getVerifyCodeResult("http://cpquery.sipo.gov.cn/freeze.main?txn-code=createImgServlet&freshStept=1")
+    .then((result) => {
+        console.log(result);
+    });

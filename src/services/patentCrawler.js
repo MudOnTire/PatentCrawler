@@ -73,4 +73,16 @@ Crawler.prototype.getFeeOfPatent = function (applyNumber, token) {
     });
 }
 
+Crawler.prototype.breakAuth = function () {
+    return new Promise((resolve, reject) => {
+        nightmare
+        .goto("http://cpquery.sipo.gov.cn/txnPantentInfoList.do")
+        .wait("#authImg")
+        .wait(500)
+        .evaluate(()=>{
+            const authImg = document.querySelector("#authImg");
+        })
+    })
+}
+
 module.exports = Crawler;
