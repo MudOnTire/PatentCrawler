@@ -33,7 +33,7 @@ function getRandomIP() {
 
 const nightmare = Nightmare({
     show: true, waitTimeout: 5000
-}).viewport(1280, 800);
+}).viewport(1024, 1000);
 
 function Crawler() { }
 
@@ -43,7 +43,7 @@ Crawler.prototype.getFeeOfPatent = function (applyNumber, token) {
         nightmare
             .useragent(getRandomUserAgent())
             .goto(url, { "X-Forwarded-For": getRandomIP() })
-            .wait("#djfid")
+            .wait("#djfid tbody")
             .wait(getRandomInt(300, 600))
             .evaluate(() => {
                 const trs = document.querySelectorAll('#djfid table tr');
