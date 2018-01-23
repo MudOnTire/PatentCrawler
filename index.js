@@ -8,6 +8,7 @@ const patentCrawler = new PatentCrawler();
 
 const token = "69892E823FC94491B58A6D17682BDE69";
 
+//生产所有的任务
 async function reGenerateTasks() {
     await dbService.connectIptp();
     await dbService.connectLocal();
