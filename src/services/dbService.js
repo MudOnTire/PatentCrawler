@@ -1,6 +1,7 @@
 const mysql = require("mysql");
 const College = require("../models/college");
 const Patent = require("../models/patent");
+const PatentTask = require("../models/patentTask");
 
 //Constructor
 function DBService() {
@@ -147,7 +148,7 @@ DBService.prototype.createPatentFutureFee = function (patentId, patentApplyNumbe
 
 //patent_task
 
-//获取所有的patent_task
+//获取所有未执行的patent_task
 DBService.prototype.getAllPatentTasks = function () {
     const connection = this.localConnection;
     return new Promise((resolve, reject) => {
@@ -157,7 +158,10 @@ DBService.prototype.getAllPatentTasks = function () {
             if (error) {
                 reject(error);
             }
-            resolve(result);
+            const tasks = result.map((task, index) => {
+                return new PatentTask(task["id"], task["patent_id"], task["patent_apply_number"], task["patent_title"], task["is_done"]);
+            });
+            resolve(tasks);
         });
     });
 }
