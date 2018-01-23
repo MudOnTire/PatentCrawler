@@ -33,10 +33,10 @@ function getRandomIP() {
 
 const nightmare = Nightmare({
     show: true,
-    gotoTimeout: 3000,
-    loadTimeout: 3000,
-    waitTimeout: 3000,
-    executionTimeout: 3000
+    gotoTimeout: 5000,
+    loadTimeout: 5000,
+    waitTimeout: 5000,
+    executionTimeout: 5000
 }).viewport(1024, 1000);
 
 function Crawler() { }
@@ -73,27 +73,41 @@ Crawler.prototype.getFeeOfPatent = function (applyNumber, token) {
     });
 }
 
-Crawler.prototype.captureAuthImg = function () {
+Crawler.prototype.getAuthImageRect = function () {
     return new Promise((resolve, reject) => {
         nightmare
             .goto("http://cpquery.sipo.gov.cn/txnPantentInfoList.do")
             .wait("#authImg")
             .wait(500)
             .evaluate(() => {
-                const authImg = document.querySelector("#authImg");
-                const domRect = authImg.getBoundingClientRect();
-                nightmare.screenshot("./assets/authCode.png", {
-                    x: domRect.x,
-                    y: domRect.y,
+                var authImg = document.querySelector("#authImg");
+                var domRect = authImg.getBoundingClientRect();
+                var rect = {
+                    x: domRect.left,
+                    y: domRect.top,
                     width: domRect.width,
                     height: domRect.height
-                });
+                };
+                return rect;
             })
-            .then(() => {
-                resolve();
+            .then((rect) => {
+                resolve(rect);
             }).catch((error) => {
                 reject(error);
             });
+    });
+}
+
+Crawler.prototype.getAuthImage = function (rect) {
+    return new Promise((resolve, reject) => {
+        nightmare
+            .goto("http://cpquery.sipo.gov.cn/txnPantentInfoList.do")
+            .wait("#authImg")
+            .wait(500)
+            .screenshot('./assets/authCode.png', rect, () => {
+                resolve();
+            })
+            .then()
     });
 }
 
