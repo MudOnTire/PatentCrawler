@@ -6,7 +6,7 @@ const FutureFee = require('./src/models/futureFee');
 const dbService = new DBService();
 const patentCrawler = new PatentCrawler();
 
-const token = "297C323254DB4D2BA0A19EBE52225BCB";
+const token = "69892E823FC94491B58A6D17682BDE69";
 
 async function start() {
     await dbService.connectIptp();

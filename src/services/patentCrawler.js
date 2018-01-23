@@ -25,6 +25,11 @@ function getRandomUserAgent() {
     return userAgents[r];
 }
 
+function getRandomIP() {
+    const ip = `${getRandomInt(20, 255)}.${getRandomInt(20, 255)}.${getRandomInt(20, 255)}.${getRandomInt(20, 255)}`;
+    return ip;
+}
+
 const nightmare = Nightmare({ show: true }).viewport(1280, 800);
 
 function Crawler() { }
@@ -34,7 +39,7 @@ Crawler.prototype.getFeeOfPatent = function (applyNumber, token) {
     return new Promise((resolve, reject) => {
         nightmare
             .useragent(getRandomUserAgent())
-            .goto(url)
+            .goto(url, { "X-Forwarded-For": getRandomIP() })
             .wait("#djfid")
             .evaluate(() => {
                 const trs = document.querySelectorAll('#djfid table tr');
