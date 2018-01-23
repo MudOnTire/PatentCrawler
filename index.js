@@ -54,7 +54,12 @@ async function start() {
 
 // start();
 // reGenerateTasks(); 
-ocrService.getVerifyCodeResult("http://cpquery.sipo.gov.cn/freeze.main?txn-code=createImgServlet&freshStept=1")
-    .then((result) => {
-        console.log(result);
-    });
+
+// ocrService.getVerifyCodeResult("http://cpquery.sipo.gov.cn/freeze.main?txn-code=createImgServlet&freshStept=1")
+//     .then((result) => {
+//         console.log(result);
+//     });
+
+patentCrawler.captureAuthImg().then(()=>{
+    console.log("got image");
+})

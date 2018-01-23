@@ -73,16 +73,28 @@ Crawler.prototype.getFeeOfPatent = function (applyNumber, token) {
     });
 }
 
-Crawler.prototype.breakAuth = function () {
+Crawler.prototype.captureAuthImg = function () {
     return new Promise((resolve, reject) => {
         nightmare
-        .goto("http://cpquery.sipo.gov.cn/txnPantentInfoList.do")
-        .wait("#authImg")
-        .wait(500)
-        .evaluate(()=>{
-            const authImg = document.querySelector("#authImg");
-        })
-    })
+            .goto("http://cpquery.sipo.gov.cn/txnPantentInfoList.do")
+            .wait("#authImg")
+            .wait(500)
+            .evaluate(() => {
+                const authImg = document.querySelector("#authImg");
+                const domRect = authImg.getBoundingClientRect();
+                nightmare.screenshot("./assets/authCode.png", {
+                    x: domRect.x,
+                    y: domRect.y,
+                    width: domRect.width,
+                    height: domRect.height
+                });
+            })
+            .then(() => {
+                resolve();
+            }).catch((error) => {
+                reject(error);
+            });
+    });
 }
 
 module.exports = Crawler;
