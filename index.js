@@ -6,7 +6,7 @@ const FutureFee = require('./src/models/futureFee');
 const dbService = new DBService();
 const patentCrawler = new PatentCrawler();
 
-const token = "DACFDA021703487EBBAAC4843A40B5F9";
+const token = "9C02544B9BD64C00BDB2C621DDDC8AEC";
 
 //生成所有的任务
 async function reGenerateTasks() {
@@ -35,6 +35,10 @@ async function start() {
         const feeResult = await patentCrawler.getFeeOfPatent(applyNumber, token).catch((err) => {
             console.error(err);
         });
+        if (!feeResult) {
+            --i;
+            continue;
+        }
         const futureFees = feeResult.map((data, index) => {
             return new FutureFee(data.feeType, data.feeAmount, data.deadline);
         });

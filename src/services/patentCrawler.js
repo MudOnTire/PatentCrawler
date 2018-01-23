@@ -32,7 +32,11 @@ function getRandomIP() {
 }
 
 const nightmare = Nightmare({
-    show: true, waitTimeout: 5000
+    show: true,
+    gotoTimeout: 3000,
+    loadTimeout: 3000,
+    waitTimeout: 3000,
+    executionTimeout: 3000
 }).viewport(1024, 1000);
 
 function Crawler() { }
@@ -56,7 +60,6 @@ Crawler.prototype.getFeeOfPatent = function (applyNumber, token) {
                         const feeType = tds[0].querySelector(spanSelector).title;
                         const feeAmount = tds[1].querySelector(spanSelector).title;
                         const deadline = tds[2].querySelector(spanSelector).title;
-                        console.log(`${feeType}-${feeAmount}-${deadline}`);
                         futureFees.push({ feeType: feeType, feeAmount: feeAmount, deadline: deadline });
                     }
                 }
