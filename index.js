@@ -32,17 +32,13 @@ async function reGenerateTasks() {
 }
 
 //执行任务
-async function start() {
+async function startCrawling() {
     await dbService.connectLocal();
     const tasks = await dbService.getAllPatentTasks();
     for (let i = 0; i < tasks.length; i++) {
         let task = tasks[i];
         let applyNumber = patentUtil.getPatentApplyNumber(task.patentApplyNumber);
-        const feeResult = await patentCrawler
-            .getFeeOfPatent(applyNumber, token)
-            .catch((err) => {
-                patentCrawler.end();
-            });
+        const feeResult = await patentCrawler.getFeeOfPatent(applyNumber, token)
         if (!feeResult) {
             --i;
             continue;
@@ -58,53 +54,61 @@ async function start() {
     console.log("All tasks done!!!");
 }
 
-// start();
-// reGenerateTasks(); 
-
+//破解进入查询页面, 成功返回true，失败则不断重试
 async function breakAuth() {
-    let accurate = false;
     var clipRect = {
         x: 231,
         y: 289,
         width: 50,
         height: 26
     };
-    while (!accurate) {
-        await patentCrawler.getAuthImage(clipRect);
-        const imgInfo = await imageUtil.imageDenoiseAsync("./assets/authCode.png");
-        console.log(imgInfo);
-        const resultStr = await ocrService.getVerifyCodeResult();
-        const result = JSON.parse(resultStr);
-        console.log(result);
-        const wordsResult = result["words_result"];
-        if (!wordsResult || wordsResult.length === 0) {
-            continue;
-        }
-        accurate = wordsResult[0].probability.average > 0.8;
-        if (accurate) {
-            let codeText = result.words_result[0].words;
-            const pattern = /.*(\d).*([+-]).*(\d)/;
-            const match = codeText.match(pattern);
-            if (match) {
-                let num1 = Number(match[1]);
-                let operator = match[2];
-                let num2 = Number(match[3]);
-                let answer = operator === "+" ? num1 + num2 : num1 - num2;
-                let tokenResult = await patentCrawler.getTokenWithAuthCode(answer).catch(() => { });
-                token = tokenResult;
-                await start();
-            } else {
-                accurate = false;
-                patentCrawler.end();
-                continue;
-            }
+    await patentCrawler.getAuthImage(clipRect);
+    const imgInfo = await imageUtil.imageDenoiseAsync("./assets/authCode.png");
+    console.log(imgInfo);
+    const resultStr = await ocrService.getVerifyCodeResult();
+    const result = JSON.parse(resultStr);
+    console.log(result);
+    const wordsResult = result["words_result"];
+    if (!wordsResult || wordsResult.length === 0) {
+        return false;
+    }
+    let accurate = wordsResult[0].probability.average > 0.7;
+    if (accurate) {
+        let codeText = result.words_result[0].words;
+        const pattern = /.*(\d).*([+-]).*(\d)/;
+        const match = codeText.match(pattern);
+        if (match) {
+            let num1 = Number(match[1]);
+            let operator = match[2];
+            let num2 = Number(match[3]);
+            let answer = operator === "+" ? num1 + num2 : num1 - num2;
+            let tokenResult = await patentCrawler.getTokenWithAuthCode(answer).catch(() => { });
+            token = tokenResult;
+            return true;
         } else {
-            patentCrawler.end();
-            continue;
+            return false;
         }
-        console.log(result);
+    } else {
+        return false;
     }
 }
 
-breakAuth();
-// patentCrawler.test();
+//主函数
+async function main() {
+    let allTasksSuccess = false;
+    while (!allTasksSuccess) {
+        const breakSuccess = await breakAuth();
+        if (breakSuccess) {
+            try {
+                await startCrawling();
+                allTasksSuccess = true;
+            } catch (err) {
+                patentCrawler.end();
+            }
+        } else {
+            patentCrawler.end();
+        }
+    }
+}
+
+main();
