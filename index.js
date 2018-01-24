@@ -1,7 +1,11 @@
+//services
 const DBService = require('./src/services/dbService');
 const OCRService = require('./src/services/ocrService');
 const PatentCrawler = require('./src/services/patentCrawler');
+//uitls
 const patentUtil = require('./src/utils/patentUtil');
+const imageUtil = require('./src/utils/imageUtil');
+//models
 const FutureFee = require('./src/models/futureFee');
 
 const dbService = new DBService();
@@ -63,6 +67,8 @@ async function breakAuth() {
         height: 26
     };
     await patentCrawler.getAuthImage(rect);
+    const imgInfo = await imageUtil.imageDenoiseAsync("./assets/authCode.png");
+    console.log(imgInfo);
     var result = await ocrService.getVerifyCodeResult();
     console.log(result);
 }
