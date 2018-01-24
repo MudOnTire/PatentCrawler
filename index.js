@@ -12,7 +12,7 @@ const dbService = new DBService();
 const ocrService = new OCRService();
 const patentCrawler = new PatentCrawler();
 
-const token = "C00D909B92844C4285E26AA9881ED4BE";
+let token = "C00D909B92844C4285E26AA9881ED4BE";
 
 //生成所有的任务
 async function reGenerateTasks() {
@@ -71,18 +71,26 @@ async function breakAuth() {
         await patentCrawler.getAuthImage(clipRect);
         const imgInfo = await imageUtil.imageDenoiseAsync("./assets/authCode.png");
         console.log(imgInfo);
-        const result = await ocrService.getVerifyCodeResult();
+        const resultStr = await ocrService.getVerifyCodeResult();
+        const result = JSON.parse(resultStr);
         console.log(result);
-        accurate = result.words_result[0].probability.average > 0.8;
+        const wordsResult = result["words_result"];
+        if (!wordsResult || wordsResult.length === 0) {
+            continue;
+        }
+        accurate = wordsResult[0].probability.average > 0.8;
         if (accurate) {
             let codeText = result.words_result[0].words;
-            const pattern = /.*(\d).*([+-]).*(\d)/g;
+            const pattern = /.*(\d).*([+-]).*(\d)/;
             const match = codeText.match(pattern);
-            if (match.length > 0) {
-                let num1 = match[1];
+            if (match) {
+                let num1 = Number(match[1]);
                 let operator = match[2];
-                let num2 = match[3];
+                let num2 = Number(match[3]);
                 let answer = operator === "+" ? num1 + num2 : num1 - num2;
+                let tokenResult = await patentCrawler.getTokenWithAuthCode(answer).catch(() => { });
+                token = tokenResult;
+                await start();
             } else {
                 accurate = false;
                 continue;
@@ -92,7 +100,7 @@ async function breakAuth() {
         }
         console.log(result);
     }
-
 }
 
 breakAuth();
+// patentCrawler.test();

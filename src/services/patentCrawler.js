@@ -117,23 +117,36 @@ Crawler.prototype.getAuthImage = function (rect) {
 //通过验证码获取token
 Crawler.prototype.getTokenWithAuthCode = function (code) {
     return new Promise((resolve, reject) => {
-        let url = nightmare
+        nightmare
             .type("#very-code", code)
-            .type("#select-key:shenqingrxm", "南京理工大学")
-            .wait(5000)
-            .click("input#query")
+            .type(".input_bg1.input_bg_over", "2014208680884")
+            .click("td>a[href='javascript:;']")
+            .click("#query")
             .wait(".content_listx")
             .click(".content_listx > .content_boxx li a")
-            .wait(".tab_list")
-            .url();
-        let pattern = /token=([^&]+)&/g
-        let match = url.match(pattern);
-        if (match.length > 0) {
-            resolve(match[1]);
-        } else {
-            reject();
-        }
+            .wait(1000)
+            .url()
+            .then((url) => {
+                let pattern = /token=([^&]+)&/
+                let match = url.match(pattern);
+                if (match.length > 0) {
+                    resolve(match[1]);
+                } else {
+                    reject();
+                }
+            });
     });
+}
+
+Crawler.prototype.test = function () {
+    nightmare
+        .goto("http://cpquery.sipo.gov.cn/txnPantentInfoList.do")
+        .type("#very-code", 2)
+        .type(".input_bg1.input_bg_over", "2014208680884")
+        .click("td>a[href='javascript:;']")
+        .click("#query")
+        .url()
+        .then()
 }
 
 module.exports = Crawler;

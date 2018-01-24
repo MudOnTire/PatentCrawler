@@ -1,9 +1,9 @@
 const AipOcrClient = require("baidu-aip-sdk").ocr;
 const fs = require("fs");
 
-const APP_ID = "10734995";
-const API_KEY = "NXRHYZGNRorLViQfkhFdmGkz";
-const SECRET_KEY = "ELdM8MsdAtsav8V7WCICqnl3rjmBqzch";
+const APP_ID = "10740609";
+const API_KEY = "zPX4gUpoKstyvw5DrjK91OxG";
+const SECRET_KEY = "a6KC17nwcgeBMFRo77hrYdxhYDLPyUHS";
 
 function OCRService() {
     this.ocrClient = new AipOcrClient(APP_ID, API_KEY, SECRET_KEY);
