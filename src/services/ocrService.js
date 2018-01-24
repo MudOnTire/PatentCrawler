@@ -12,7 +12,7 @@ function OCRService() {
 OCRService.prototype.getVerifyCodeResult = function () {
     const ocrClient = this.ocrClient;
     return new Promise((resolve, reject) => {
-        const image = fs.readFileSync("./assets/authCodeSharpen.png").toString("base64");
+        const image = fs.readFileSync("./assets/authCode.png").toString("base64");
         const options = {
             probability: true
         };

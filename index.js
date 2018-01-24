@@ -63,8 +63,8 @@ async function breakAuth() {
         height: 26
     };
     await patentCrawler.getAuthImage(clipRect);
-    const imgInfo = await imageUtil.imageDenoiseAsync("./assets/authCode.png");
-    console.log(imgInfo);
+    // const imgInfo = await imageUtil.imageDenoiseAsync("./assets/authCode.png");
+    // console.log(imgInfo);
     const resultStr = await ocrService.getVerifyCodeResult();
     const result = JSON.parse(resultStr);
     console.log(result);
