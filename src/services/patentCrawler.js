@@ -41,6 +41,7 @@ const nightmare = Nightmare({
 
 function Crawler() { }
 
+//爬取指定专利的年费信息
 Crawler.prototype.getFeeOfPatent = function (applyNumber, token) {
     const url = urlUtil.createUrl(applyNumber, token);
     return new Promise((resolve, reject) => {
@@ -73,6 +74,7 @@ Crawler.prototype.getFeeOfPatent = function (applyNumber, token) {
     });
 }
 
+//获取验证码的坐标和宽高
 Crawler.prototype.getAuthImageRect = function () {
     return new Promise((resolve, reject) => {
         nightmare
@@ -98,6 +100,7 @@ Crawler.prototype.getAuthImageRect = function () {
     });
 }
 
+//截取验证码图片
 Crawler.prototype.getAuthImage = function (rect) {
     return new Promise((resolve, reject) => {
         nightmare
@@ -108,6 +111,28 @@ Crawler.prototype.getAuthImage = function (rect) {
                 resolve();
             })
             .then()
+    });
+}
+
+//通过验证码获取token
+Crawler.prototype.getTokenWithAuthCode = function (code) {
+    return new Promise((resolve, reject) => {
+        let url = nightmare
+            .type("#very-code", code)
+            .type("#select-key:shenqingrxm", "南京理工大学")
+            .wait(5000)
+            .click("input#query")
+            .wait(".content_listx")
+            .click(".content_listx > .content_boxx li a")
+            .wait(".tab_list")
+            .url();
+        let pattern = /token=([^&]+)&/g
+        let match = url.match(pattern);
+        if (match.length > 0) {
+            resolve(match[1]);
+        } else {
+            reject();
+        }
     });
 }
 
