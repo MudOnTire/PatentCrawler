@@ -60,17 +60,39 @@ async function start() {
 // reGenerateTasks(); 
 
 async function breakAuth() {
-    var rect = {
+    let accurate = false;
+    var clipRect = {
         x: 231,
         y: 289,
         width: 50,
         height: 26
     };
-    await patentCrawler.getAuthImage(rect);
-    const imgInfo = await imageUtil.imageDenoiseAsync("./assets/authCode.png");
-    console.log(imgInfo);
-    var result = await ocrService.getVerifyCodeResult();
-    console.log(result);
+    while (!accurate) {
+        await patentCrawler.getAuthImage(clipRect);
+        const imgInfo = await imageUtil.imageDenoiseAsync("./assets/authCode.png");
+        console.log(imgInfo);
+        const result = await ocrService.getVerifyCodeResult();
+        console.log(result);
+        accurate = result.words_result[0].probability.average > 0.8;
+        if (accurate) {
+            let codeText = result.words_result[0].words;
+            const pattern = /.*(\d).*([+-]).*(\d)/g;
+            const match = codeText.match(pattern);
+            if (match.length > 0) {
+                let num1 = match[1];
+                let operator = match[2];
+                let num2 = match[3];
+                let answer = operator === "+" ? num1 + num2 : num1 - num2;
+            } else {
+                accurate = false;
+                continue;
+            }
+        } else {
+            continue;
+        }
+        console.log(result);
+    }
+
 }
 
 breakAuth();
