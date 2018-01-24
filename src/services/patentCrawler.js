@@ -105,6 +105,7 @@ Crawler.prototype.getAuthImage = function (rect) {
     return new Promise((resolve, reject) => {
         nightmare
             .goto("http://cpquery.sipo.gov.cn/txnPantentInfoList.do")
+            .refresh()
             .wait("#authImg")
             .wait(500)
             .screenshot('./assets/authCode.png', rect, () => {
@@ -145,7 +146,7 @@ Crawler.prototype.getTokenWithAuthCode = function (code) {
 
 //停止运行
 Crawler.prototype.end = function () {
-    nightmare.end()
+    // nightmare.end()
 }
 
 //测试方法
