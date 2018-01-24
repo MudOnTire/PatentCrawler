@@ -4,7 +4,7 @@ function imageDenoiseAsync(path) {
     return new Promise((resolve, reject) => {
         sharp(path)
             .sharpen()
-            .threshold(138)
+            // .threshold(138)
             .toFile("./assets/authCodeSharpen.png", (error, info) => {
                 if (error) {
                     reject(error);

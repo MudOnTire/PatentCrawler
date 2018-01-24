@@ -33,10 +33,10 @@ function getRandomIP() {
 
 const nightmare = Nightmare({
     show: true,
-    gotoTimeout: 5000,
-    loadTimeout: 5000,
-    waitTimeout: 5000,
-    executionTimeout: 5000
+    gotoTimeout: 8000,
+    loadTimeout: 8000,
+    waitTimeout: 8000,
+    executionTimeout: 8000
 }).viewport(1024, 1000);
 
 function Crawler() { }
@@ -118,7 +118,9 @@ Crawler.prototype.getAuthImage = function (rect) {
 Crawler.prototype.getTokenWithAuthCode = function (code) {
     return new Promise((resolve, reject) => {
         nightmare
+            .wait(1000)
             .type("#very-code", code)
+            .wait(1000)
             .type(".input_bg1.input_bg_over", "2014208680884")
             .click("td>a[href='javascript:;']")
             .click("#query")
@@ -134,13 +136,16 @@ Crawler.prototype.getTokenWithAuthCode = function (code) {
                 } else {
                     reject();
                 }
-            });
+            })
+            .catch((error) => {
+                reject(error);
+            })
     });
 }
 
 //停止运行
 Crawler.prototype.end = function () {
-    nightmare.end();
+    nightmare.end()
 }
 
 //测试方法

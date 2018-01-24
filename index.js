@@ -82,9 +82,14 @@ async function breakAuth() {
             let operator = match[2];
             let num2 = Number(match[3]);
             let answer = operator === "+" ? num1 + num2 : num1 - num2;
-            let tokenResult = await patentCrawler.getTokenWithAuthCode(answer).catch(() => { });
-            token = tokenResult;
-            return true;
+            try {
+                let tokenResult = await patentCrawler.getTokenWithAuthCode(answer);
+                token = tokenResult;
+                return true;
+            } catch (error) {
+                console.log(`验证失败：${error}`);
+                return false;
+            }
         } else {
             return false;
         }
