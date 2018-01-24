@@ -49,7 +49,7 @@ Crawler.prototype.getFeeOfPatent = function (applyNumber, token) {
             .useragent(getRandomUserAgent())
             .goto(url, { "X-Forwarded-For": getRandomIP() })
             .wait("#djfid tbody")
-            .wait(getRandomInt(300, 600))
+            .wait(getRandomInt(400, 700))
             .evaluate(() => {
                 const trs = document.querySelectorAll('#djfid table tr');
                 let futureFees = [];
@@ -138,6 +138,12 @@ Crawler.prototype.getTokenWithAuthCode = function (code) {
     });
 }
 
+//停止运行
+Crawler.prototype.end = function () {
+    nightmare.end();
+}
+
+//测试方法
 Crawler.prototype.test = function () {
     nightmare
         .goto("http://cpquery.sipo.gov.cn/txnPantentInfoList.do")

@@ -38,9 +38,11 @@ async function start() {
     for (let i = 0; i < tasks.length; i++) {
         let task = tasks[i];
         let applyNumber = patentUtil.getPatentApplyNumber(task.patentApplyNumber);
-        const feeResult = await patentCrawler.getFeeOfPatent(applyNumber, token).catch((err) => {
-            console.error(err);
-        });
+        const feeResult = await patentCrawler
+            .getFeeOfPatent(applyNumber, token)
+            .catch((err) => {
+                patentCrawler.end();
+            });
         if (!feeResult) {
             --i;
             continue;
@@ -93,9 +95,11 @@ async function breakAuth() {
                 await start();
             } else {
                 accurate = false;
+                patentCrawler.end();
                 continue;
             }
         } else {
+            patentCrawler.end();
             continue;
         }
         console.log(result);
