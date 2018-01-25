@@ -48,8 +48,8 @@ Crawler.prototype.getFeeOfPatent = function (applyNumber, token) {
         nightmare
             .useragent(getRandomUserAgent())
             .goto(url, { "X-Forwarded-For": getRandomIP() })
-            .wait("#djfid tbody")
-            .wait(getRandomInt(400, 700))
+            .wait("#djfid")
+            .wait(getRandomInt(500, 1000))
             .evaluate(() => {
                 const trs = document.querySelectorAll('#djfid table tr');
                 let futureFees = [];
@@ -72,6 +72,27 @@ Crawler.prototype.getFeeOfPatent = function (applyNumber, token) {
                 reject(error);
             });
     });
+}
+
+//判断是否在过期提示页面
+Crawler.prototype.isInExpirePage = function () {
+    return new Promise((resolve, reject) => {
+        nightmare
+            .evaluate(() => {
+                var backA = document.querySelector("div.binding a");
+                return backA && backA.textContent === "返回";
+            })
+            .then((isExpire) => {
+                if (isExpire) {
+                    resolve();
+                } else {
+                    reject();
+                }
+            })
+            .catch((error) => {
+                reject();
+            })
+    })
 }
 
 //获取验证码的坐标和宽高

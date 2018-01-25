@@ -37,7 +37,16 @@ async function startCrawling() {
     for (let i = 0; i < tasks.length; i++) {
         let task = tasks[i];
         let applyNumber = patentUtil.getPatentApplyNumber(task.patentApplyNumber);
-        const feeResult = await patentCrawler.getFeeOfPatent(applyNumber, token)
+        let feeResult = null;
+        try {
+            feeResult = await patentCrawler.getFeeOfPatent(applyNumber, token)
+        } catch (error) {
+            console.log(error);
+            const isExpire = await patentCrawler.isInExpirePage();
+            if (isExpire) {
+                throw "Token Expired!!!";
+            }
+        }
         if (!feeResult) {
             --i;
             continue;
@@ -66,7 +75,7 @@ async function breakAuth() {
     // console.log(imgInfo);
     const resultStr = await ocrService.getVerifyCodeResult();
     const result = JSON.parse(resultStr);
-    console.log(result);
+    console.log(resultStr);
     const wordsResult = result["words_result"];
     if (!wordsResult || wordsResult.length === 0) {
         return false;
@@ -103,7 +112,7 @@ async function main() {
                 await startCrawling();
                 allTasksSuccess = true;
             } catch (err) {
-                patentCrawler.end();
+                console.log(err);
             }
         } else {
             patentCrawler.end();
