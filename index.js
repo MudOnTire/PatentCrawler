@@ -117,6 +117,9 @@ async function main() {
     await dbService.connectLocal();
     while (!allTasksSuccess) {
         const ip = await ipUtil.getIP();
+        if (patentCrawler) {
+            await patentCrawler.end();
+        }
         patentCrawler = new PatentCrawler(ip);
         const breakSuccess = await breakAuth();
         if (breakSuccess) {
@@ -126,8 +129,6 @@ async function main() {
             } catch (err) {
                 console.log(err);
             }
-        } else {
-            patentCrawler.end();
         }
     }
 }

@@ -1,4 +1,5 @@
 const http = require("http");
+const fs = require("fs");
 
 function getIP() {
     return new Promise((resolve, reject) => {
@@ -24,8 +25,13 @@ function getIP() {
             res.on('end', () => {
                 try {
                     const ipInfo = JSON.parse(rawData);
-                    console.log(ipInfo);
                     const ip = `${ipInfo.msg[0].ip}:${ipInfo.msg[0].port}`;
+                    fs.appendFile('./assets/ip.txt', `\n${ip}\n`, function (err) {
+                        if (err) {
+                            console.log("log ip failed");
+                        }
+                    });
+                    console.log(ip);
                     resolve(ip);
                 } catch (e) {
                     console.error(e.message);

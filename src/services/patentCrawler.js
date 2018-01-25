@@ -204,7 +204,14 @@ Crawler.prototype.getTokenWithAuthCode = function (code) {
 //停止运行
 Crawler.prototype.end = function () {
     const nightmare = this.nightmare;
-    // nightmare.end()
+    nightmare
+        .end()
+        .then(() => {
+            resolve();
+        })
+        .catch(() => {
+            reject();
+        })
 }
 
 //测试方法
