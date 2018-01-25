@@ -33,7 +33,6 @@ async function reGenerateTasks() {
 
 //执行任务
 async function startCrawling() {
-    await dbService.connectLocal();
     const tasks = await dbService.getAllPatentTasks();
     for (let i = 0; i < tasks.length; i++) {
         let task = tasks[i];
@@ -72,25 +71,20 @@ async function breakAuth() {
     if (!wordsResult || wordsResult.length === 0) {
         return false;
     }
-    let accurate = wordsResult[0].probability.average > 0.7;
-    if (accurate) {
-        let codeText = result.words_result[0].words;
-        const pattern = /.*(\d).*([+-]).*(\d)/;
-        const match = codeText.match(pattern);
-        if (match) {
-            let num1 = Number(match[1]);
-            let operator = match[2];
-            let num2 = Number(match[3]);
-            let answer = operator === "+" ? num1 + num2 : num1 - num2;
-            try {
-                let tokenResult = await patentCrawler.getTokenWithAuthCode(answer);
-                token = tokenResult;
-                return true;
-            } catch (error) {
-                console.log(`验证失败：${error}`);
-                return false;
-            }
-        } else {
+    let codeText = result.words_result[0].words;
+    const pattern = /.*(\d).*([+-]).*(\d)/;
+    const match = codeText.match(pattern);
+    if (match) {
+        let num1 = Number(match[1]);
+        let operator = match[2];
+        let num2 = Number(match[3]);
+        let answer = operator === "+" ? num1 + num2 : num1 - num2;
+        try {
+            let tokenResult = await patentCrawler.getTokenWithAuthCode(answer);
+            token = tokenResult;
+            return true;
+        } catch (error) {
+            console.log(`验证失败：${error}`);
             return false;
         }
     } else {
@@ -101,6 +95,7 @@ async function breakAuth() {
 //主函数
 async function main() {
     let allTasksSuccess = false;
+    await dbService.connectLocal();
     while (!allTasksSuccess) {
         const breakSuccess = await breakAuth();
         if (breakSuccess) {
