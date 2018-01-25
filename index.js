@@ -5,14 +5,15 @@ const PatentCrawler = require('./src/services/patentCrawler');
 //uitls
 const patentUtil = require('./src/utils/patentUtil');
 const imageUtil = require('./src/utils/imageUtil');
+const ipUtil = require("./src/utils/ipUtil");
 //models
 const FutureFee = require('./src/models/futureFee');
 
 const dbService = new DBService();
 const ocrService = new OCRService();
-const patentCrawler = new PatentCrawler();
 
-let token = "C00D909B92844C4285E26AA9881ED4BE";
+let patentCrawler = null;
+let token = null;
 
 //生成所有的任务
 async function reGenerateTasks() {
@@ -75,7 +76,11 @@ async function breakAuth() {
         width: 50,
         height: 26
     };
-    await patentCrawler.getAuthImage(clipRect);
+    try {
+        await patentCrawler.getAuthImage(clipRect);
+    } catch (error) {
+        return false;
+    }
     // const imgInfo = await imageUtil.imageDenoiseAsync("./assets/authCode.png");
     // console.log(imgInfo);
     const resultStr = await ocrService.getVerifyCodeResult();
@@ -111,6 +116,8 @@ async function main() {
     let allTasksSuccess = false;
     await dbService.connectLocal();
     while (!allTasksSuccess) {
+        const ip = await ipUtil.getIP();
+        patentCrawler = new PatentCrawler(ip);
         const breakSuccess = await breakAuth();
         if (breakSuccess) {
             try {

@@ -31,28 +31,30 @@ function getRandomIP() {
     return ip;
 }
 
-const nightmare = Nightmare({
-    switches: {
-        "proxy-server": "222.71.88.41:33586"
-    },
-    show: true,
-    gotoTimeout: 60000,
-    loadTimeout: 60000,
-    waitTimeout: 60000,
-    executionTimeout: 60000
-}).viewport(1024, 1000);
-
-function Crawler() { }
+function Crawler(ip) {
+    this.ip = ip;
+    this.nightmare = Nightmare({
+        switches: {
+            "proxy-server": ip
+        },
+        show: true,
+        gotoTimeout: 30000,
+        loadTimeout: 30000,
+        waitTimeout: 30000,
+        executionTimeout: 30000
+    }).viewport(1024, 1000);
+}
 
 //爬取指定专利的年费信息
 Crawler.prototype.getFeeOfPatent = function (applyNumber, token) {
     const url = urlUtil.createUrl(applyNumber, token);
+    const nightmare = this.nightmare;
     return new Promise((resolve, reject) => {
         nightmare
             .useragent(getRandomUserAgent())
             .goto(url, { "X-Forwarded-For": getRandomIP() })
             .wait("#djfid")
-            .wait(getRandomInt(500, 1000))
+            .wait(getRandomInt(200, 500))
             .evaluate(() => {
                 const trs = document.querySelectorAll('#djfid table tr');
                 let futureFees = [];
@@ -79,6 +81,7 @@ Crawler.prototype.getFeeOfPatent = function (applyNumber, token) {
 
 //判断是否在过期提示页面
 Crawler.prototype.isInExpirePage = function () {
+    const nightmare = this.nightmare;
     return new Promise((resolve, reject) => {
         nightmare
             .refresh()
@@ -102,6 +105,7 @@ Crawler.prototype.isInExpirePage = function () {
 
 //判断是否在专利详情页面 
 Crawler.prototype.isInPatentDetailPage = function () {
+    const nightmare = this.nightmare;
     return new Promise((resolve, reject) => {
         nightmare
             .refresh()
@@ -125,6 +129,7 @@ Crawler.prototype.isInPatentDetailPage = function () {
 
 //获取验证码的坐标和宽高
 Crawler.prototype.getAuthImageRect = function () {
+    const nightmare = this.nightmare;
     return new Promise((resolve, reject) => {
         nightmare
             .goto("http://cpquery.sipo.gov.cn/txnPantentInfoList.do")
@@ -151,10 +156,10 @@ Crawler.prototype.getAuthImageRect = function () {
 
 //截取验证码图片
 Crawler.prototype.getAuthImage = function (rect) {
+    const nightmare = this.nightmare;
     return new Promise((resolve, reject) => {
         nightmare
             .goto("http://cpquery.sipo.gov.cn/txnPantentInfoList.do")
-            // .goto("http://www.baidu.com")
             .refresh()
             .wait("#authImg")
             .wait(500)
@@ -162,11 +167,13 @@ Crawler.prototype.getAuthImage = function (rect) {
                 resolve();
             })
             .then()
+            .catch();
     });
 }
 
 //通过验证码获取token
 Crawler.prototype.getTokenWithAuthCode = function (code) {
+    const nightmare = this.nightmare;
     return new Promise((resolve, reject) => {
         nightmare
             .wait(1000)
@@ -190,17 +197,19 @@ Crawler.prototype.getTokenWithAuthCode = function (code) {
             })
             .catch((error) => {
                 reject(error);
-            })
+            });
     });
 }
 
 //停止运行
 Crawler.prototype.end = function () {
+    const nightmare = this.nightmare;
     // nightmare.end()
 }
 
 //测试方法
 Crawler.prototype.test = function () {
+    const nightmare = this.nightmare;
     nightmare
         .goto("http://cpquery.sipo.gov.cn/txnPantentInfoList.do")
         .type("#very-code", 2)
