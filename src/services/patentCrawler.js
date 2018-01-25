@@ -183,6 +183,7 @@ Crawler.prototype.getTokenWithAuthCode = function (code) {
             .click("td>a[href='javascript:;']")
             .click("#query")
             .wait(".content_listx")
+            .wait(".content_listx > .content_boxx li a")
             .click(".content_listx > .content_boxx li a")
             .wait(1000)
             .url()
@@ -204,14 +205,16 @@ Crawler.prototype.getTokenWithAuthCode = function (code) {
 //停止运行
 Crawler.prototype.end = function () {
     const nightmare = this.nightmare;
-    nightmare
-        .end()
-        .then(() => {
-            resolve();
-        })
-        .catch(() => {
-            reject();
-        })
+    return new Promise((resolve, reject) => {
+        nightmare
+            .end()
+            .then(() => {
+                resolve();
+            })
+            .catch(() => {
+                reject();
+            });
+    });
 }
 
 //测试方法
