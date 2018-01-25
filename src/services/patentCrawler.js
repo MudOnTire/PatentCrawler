@@ -74,44 +74,48 @@ Crawler.prototype.getFeeOfPatent = function (applyNumber, token) {
     });
 }
 
-//判断是否在专利详情页面
-Crawler.prototype.isInPatentDetailPage = function () {
+//判断是否在过期提示页面
+Crawler.prototype.isInExpirePage = function () {
     return new Promise((resolve, reject) => {
         nightmare
+            .refresh()
+            .wait(1000)
             .evaluate(() => {
                 var backA = document.querySelector("div.binding a");
                 return backA && backA.textContent === "返回";
             })
             .then((isExpire) => {
                 if (isExpire) {
-                    resolve();
+                    resolve(true);
                 } else {
-                    reject();
+                    reject(false);
                 }
             })
             .catch((error) => {
-                reject();
+                reject(false);
             })
     })
 }
 
-//判断是否在过期提示页面
-Crawler.prototype.isInExpirePage = function () {
+//判断是否在专利详情页面 
+Crawler.prototype.isInPatentDetailPage = function () {
     return new Promise((resolve, reject) => {
         nightmare
+            .refresh()
+            .wait(1000)
             .evaluate(() => {
                 var tab = document.querySelector(".tab_body>.tab_list");
                 return !!tab;
             })
             .then((isPatentDetail) => {
                 if (isPatentDetail) {
-                    resolve();
+                    resolve(true);
                 } else {
-                    reject();
+                    reject(false);
                 }
             })
             .catch((error) => {
-                reject();
+                reject(false);
             })
     })
 }
