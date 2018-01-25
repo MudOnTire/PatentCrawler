@@ -41,10 +41,15 @@ async function startCrawling() {
         try {
             feeResult = await patentCrawler.getFeeOfPatent(applyNumber, token)
         } catch (error) {
-            console.log(error);
-            const isExpire = await patentCrawler.isInExpirePage();
-            if (isExpire) {
-                throw "Token Expired!!!";
+            const isDetail = await patentCrawler.isInPatentDetailPage();
+            if (isDetail) {
+                --i;
+                continue;
+            } else {
+                const isExpire = await patentCrawler.isInExpirePage();
+                if (isExpire) {
+                    throw "Token Expired!!!";
+                }
             }
         }
         if (!feeResult) {
