@@ -92,7 +92,7 @@ async function breakAuth() {
         let num1 = Number(match[1]);
         let operator = match[2];
         let num2 = Number(match[3]);
-        let answer = operator === "+" ? num1 + num2 : num1 - num2;
+        let answer = (operator === "+" ? num1 + num2 : num1 - num2).toString();
         try {
             let tokenResult = await patentCrawler.getTokenWithAuthCode(answer);
             token = tokenResult;

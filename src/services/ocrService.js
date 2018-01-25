@@ -16,7 +16,8 @@ OCRService.prototype.getVerifyCodeResult = function () {
         const options = {
             probability: true
         };
-        ocrClient.accurateBasic(image, options).then(function (result) {
+        // ocrClient.accurateBasic(image, options).then(function (result) {
+        ocrClient.generalBasic(image, options).then(function (result) {
             var result = JSON.stringify(result);
             resolve(result);
         }).catch(function (err) {

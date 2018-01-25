@@ -32,11 +32,14 @@ function getRandomIP() {
 }
 
 const nightmare = Nightmare({
+    switches: {
+        "proxy-server": "222.71.88.41:33586"
+    },
     show: true,
-    gotoTimeout: 8000,
-    loadTimeout: 8000,
-    waitTimeout: 8000,
-    executionTimeout: 8000
+    gotoTimeout: 60000,
+    loadTimeout: 60000,
+    waitTimeout: 60000,
+    executionTimeout: 60000
 }).viewport(1024, 1000);
 
 function Crawler() { }
@@ -151,6 +154,7 @@ Crawler.prototype.getAuthImage = function (rect) {
     return new Promise((resolve, reject) => {
         nightmare
             .goto("http://cpquery.sipo.gov.cn/txnPantentInfoList.do")
+            // .goto("http://www.baidu.com")
             .refresh()
             .wait("#authImg")
             .wait(500)
