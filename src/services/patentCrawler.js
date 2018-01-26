@@ -34,12 +34,15 @@ function getRandomIP() {
 //Constructor
 function Crawler(ip) {
     this.ip = ip;
-    this.switches = {};
+    let switches = {};
     if (ip) {
         switches["proxy-server"] = ip
     }
     this.nightmare = Nightmare({
         switches: switches,
+        // switches:{
+        //     "proxy-server":"115.213.232.162:42319"
+        // },
         show: true,
         gotoTimeout: 30000,
         loadTimeout: 30000,
@@ -170,7 +173,9 @@ Crawler.prototype.getAuthImage = function (rect) {
                 resolve();
             })
             .then()
-            .catch();
+            .catch(()=>{
+                reject();
+            });
     });
 }
 
