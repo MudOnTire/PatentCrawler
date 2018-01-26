@@ -31,12 +31,15 @@ function getRandomIP() {
     return ip;
 }
 
+//Constructor
 function Crawler(ip) {
     this.ip = ip;
+    this.switches = {};
+    if (ip) {
+        switches["proxy-server"] = ip
+    }
     this.nightmare = Nightmare({
-        // switches: {
-        //     "proxy-server": ip
-        // },
+        switches: switches,
         show: true,
         gotoTimeout: 30000,
         loadTimeout: 30000,

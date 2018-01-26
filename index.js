@@ -79,7 +79,7 @@ async function breakAuth() {
     try {
         await patentCrawler.getAuthImage(clipRect);
     } catch (error) {
-        return false;
+        return "switchIp";
     }
     // const imgInfo = await imageUtil.imageDenoiseAsync("./assets/authCode.png");
     // console.log(imgInfo);
@@ -114,22 +114,30 @@ async function breakAuth() {
 //主函数
 async function main() {
     let allTasksSuccess = false;
+    let shouldSwitchIp = false
+    let ip = null;
     await dbService.connectLocal();
     while (!allTasksSuccess) {
-        // let ip = await ipUtil.getIP();
-        let ip = null;
+        if (shouldSwitchIp) {
+            ip = await ipUtil.getIP();
+        }
         if (patentCrawler) {
             await patentCrawler.end();
         }
         patentCrawler = new PatentCrawler(ip);
         const breakSuccess = await breakAuth();
-        if (breakSuccess) {
+        if (breakSuccess === true) {
             try {
                 await startCrawling();
                 allTasksSuccess = true;
             } catch (err) {
                 console.log(err);
             }
+            shouldSwitchIp = false;
+        } else if (breakSuccess === "switchIp") {
+            shouldSwitchIp = true;
+        } else {
+            shouldSwitchIp = false
         }
     }
 }
