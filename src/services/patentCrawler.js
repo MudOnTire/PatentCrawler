@@ -34,9 +34,9 @@ function getRandomIP() {
 function Crawler(ip) {
     this.ip = ip;
     this.nightmare = Nightmare({
-        switches: {
-            "proxy-server": ip
-        },
+        // switches: {
+        //     "proxy-server": ip
+        // },
         show: true,
         gotoTimeout: 30000,
         loadTimeout: 30000,
@@ -182,9 +182,8 @@ Crawler.prototype.getTokenWithAuthCode = function (code) {
             .type(".input_bg1.input_bg_over", "2014208680884")
             .click("td>a[href='javascript:;']")
             .click("#query")
-            .wait(".content_listx")
-            .wait(".content_listx > .content_boxx li a")
-            .click(".content_listx > .content_boxx li a")
+            .wait(".mi_icon")
+            .click(".mi_icon")
             .wait(1000)
             .url()
             .then((url) => {
