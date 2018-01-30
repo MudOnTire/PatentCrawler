@@ -106,13 +106,13 @@ DBService.prototype.deleteFutureFeeOfPatent = function (applyNum) {
 }
 
 //插入一条专利对应的future fee记录
-DBService.prototype.createPatentFutureFee = function (patentApplyNumber, patentTitle, futureFees) {
+DBService.prototype.createPatentFutureFee = function (patentApplyNumber, futureFees) {
     const connection = this.ipTpConnection;
     return new Promise((resolve, reject) => {
         const feeString = JSON.stringify(futureFees);
         connection.query({
-            sql: `insert into zg_future_fee (patent_apply_number, patent_title, future_fee) values(?, ?, ?, ?)`,
-            values: [patentApplyNumber, patentTitle, feeString]
+            sql: `insert into zg_future_fee (patent_apply_number, future_fee) values(?, ?)`,
+            values: [patentApplyNumber, feeString]
         }, function (error, result, fields) {
             if (error) {
                 reject(error);

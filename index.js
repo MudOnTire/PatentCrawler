@@ -60,7 +60,7 @@ async function startCrawling() {
             return new FutureFee(data.feeType, data.feeAmount, data.deadline);
         });
         await dbService.deleteFutureFeeOfPatent(task.patentId);
-        const insertResult = await dbService.createPatentFutureFee(task.patentId, task.patentApplyNumber, task.patentTitle, futureFees);
+        const insertResult = await dbService.createPatentFutureFee(task.patentApplyNumber, futureFees);
         const updateResult = await dbService.donePatentTask(task.id);
         console.log(task.id);
     }
@@ -117,9 +117,9 @@ async function main() {
     let ip = null;
     await dbService.connectIptp();
     while (!allTasksSuccess) {
-        if (shouldSwitchIp) {
-            ip = await ipUtil.getIP();
-        }
+        // if (shouldSwitchIp) {
+        //     ip = await ipUtil.getIP();
+        // }
         if (patentCrawler) {
             await patentCrawler.end();
         }
