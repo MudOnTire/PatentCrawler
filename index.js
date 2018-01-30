@@ -18,6 +18,7 @@ let token = null;
 //生成所有的任务
 async function reGenerateTasks() {
     await dbService.connectIptp();
+    await dbService.connectLocal();
     await dbService.deleteAllPatentTasks();
     let colleges = await dbService.getAllColleges();
     for (let i = 0; i < colleges.length; i++) {
@@ -59,9 +60,10 @@ async function startCrawling() {
         const futureFees = feeResult.map((data, index) => {
             return new FutureFee(data.feeType, data.feeAmount, data.deadline);
         });
-        await dbService.deleteFutureFeeOfPatent(task.patentId);
+        await dbService.deleteFutureFeeOfPatent(task.patentApplyNumber);
         const insertResult = await dbService.createPatentFutureFee(task.patentApplyNumber, futureFees);
         const updateResult = await dbService.donePatentTask(task.id);
+
         console.log(task.id);
     }
     console.log("All tasks done!!!");
@@ -115,7 +117,7 @@ async function main() {
     let allTasksSuccess = false;
     let shouldSwitchIp = false
     let ip = null;
-    await dbService.connectIptp();
+    await dbService.connectLocal();
     while (!allTasksSuccess) {
         // if (shouldSwitchIp) {
         //     ip = await ipUtil.getIP();

@@ -12,6 +12,13 @@ function DBService() {
         password: 'Cnuip1109',
         database: 'iptp'
     });
+    this.localConnection = mysql.createConnection({
+        host: 'localhost',
+        port: '3306',
+        user: 'iptp',
+        password: 'Cnuip1109',
+        database: 'patentfee'
+    });
 }
 
 //连接中高平台数据库
@@ -25,6 +32,22 @@ DBService.prototype.connectIptp = function () {
                 return;
             }
             console.log("connected to iptp mysql!");
+            resolve();
+        });
+    });
+}
+
+//连接本地数据库
+DBService.prototype.connectLocal = function () {
+    const connection = this.localConnection;
+    return new Promise((resolve, reject) => {
+        connection.connect(function (err) {
+            if (err) {
+                console.error("local error connection: " + err.stack);
+                reject();
+                return;
+            }
+            console.log("connected to local mysql!");
             resolve();
         });
     });
@@ -48,7 +71,7 @@ DBService.prototype.getAllColleges = function () {
     });
 }
 
-//获取大学的所有非无效专利
+//获取大学的所有有效专利
 DBService.prototype.getPatentsOfCollege = function (collegeStorageId) {
     const connection = this.ipTpConnection;
     return new Promise((resolve, reject) => {
@@ -75,7 +98,7 @@ DBService.prototype.getPatentsOfCollege = function (collegeStorageId) {
 
 //获取指定patent的future fee记录
 DBService.prototype.getFutureFeeOfPatent = function (applyNum) {
-    const connection = this.ipTpConnection;
+    const connection = this.localConnection;
     return new Promise((resolve, reject) => {
         connection.query({
             sql: `select * from zg_future_fee where patent_apply_number = ?`,
@@ -91,7 +114,7 @@ DBService.prototype.getFutureFeeOfPatent = function (applyNum) {
 
 //删除一条指定的future fee记录
 DBService.prototype.deleteFutureFeeOfPatent = function (applyNum) {
-    const connection = this.ipTpConnection;
+    const connection = this.localConnection;
     return new Promise((resolve, reject) => {
         connection.query({
             sql: `delete from zg_future_fee where patent_apply_number = ?`,
@@ -107,7 +130,7 @@ DBService.prototype.deleteFutureFeeOfPatent = function (applyNum) {
 
 //插入一条专利对应的future fee记录
 DBService.prototype.createPatentFutureFee = function (patentApplyNumber, futureFees) {
-    const connection = this.ipTpConnection;
+    const connection = this.localConnection;
     return new Promise((resolve, reject) => {
         const feeString = JSON.stringify(futureFees);
         connection.query({
@@ -126,7 +149,7 @@ DBService.prototype.createPatentFutureFee = function (patentApplyNumber, futureF
 
 //获取所有未执行的patent_task
 DBService.prototype.getAllPatentTasks = function () {
-    const connection = this.ipTpConnection;
+    const connection = this.localConnection;
     return new Promise((resolve, reject) => {
         connection.query({
             sql: `select * from zg_patent_task where is_done = 0`
@@ -144,7 +167,7 @@ DBService.prototype.getAllPatentTasks = function () {
 
 //删除所有的patent_task
 DBService.prototype.deleteAllPatentTasks = function () {
-    const connection = this.ipTpConnection;
+    const connection = this.localConnection;
     return new Promise((resolve, reject) => {
         connection.query({
             sql: `TRUNCATE TABLE patent_task`
@@ -159,7 +182,7 @@ DBService.prototype.deleteAllPatentTasks = function () {
 
 //插入一条新patent_task任务记录
 DBService.prototype.createPatentTask = function (patent) {
-    const connection = this.ipTpConnection;
+    const connection = this.localConnection;
     return new Promise((resolve, reject) => {
         connection.query({
             sql: `insert into zg_patent_task (patent_apply_number, is_done) values(?, ?)`,
@@ -175,7 +198,7 @@ DBService.prototype.createPatentTask = function (patent) {
 
 //完成一个patent_task任务
 DBService.prototype.donePatentTask = function (taskId) {
-    const connection = this.ipTpConnection;
+    const connection = this.localConnection;
     return new Promise((resolve, reject) => {
         connection.query({
             sql: `update zg_patent_task set is_done = 1 where id = ?`,
