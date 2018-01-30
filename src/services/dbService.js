@@ -12,13 +12,6 @@ function DBService() {
         password: 'Cnuip1109',
         database: 'iptp'
     });
-    this.localConnection = mysql.createConnection({
-        host: 'localhost',
-        port: '3306',
-        user: 'iptp',
-        password: 'Cnuip1109',
-        database: 'patentfee'
-    });
 }
 
 //连接中高平台数据库
@@ -36,23 +29,6 @@ DBService.prototype.connectIptp = function () {
         });
     });
 }
-
-//连接本地数据库
-DBService.prototype.connectLocal = function () {
-    const connection = this.localConnection;
-    return new Promise((resolve, reject) => {
-        connection.connect(function (err) {
-            if (err) {
-                console.error("local error connection: " + err.stack);
-                reject();
-                return;
-            }
-            console.log("connected to local mysql!");
-            resolve();
-        });
-    });
-}
-
 
 //获取所有大学
 DBService.prototype.getAllColleges = function () {
@@ -80,7 +56,7 @@ DBService.prototype.getPatentsOfCollege = function (collegeStorageId) {
             sql: `select distinct p.IDPATENT, p.AD, p.TI, p.AN, p.PA, p.PIN, p.LASTLEGALSTATUS, p.PNM, p.PATTYPE \
                 from iptp.st_patentinfo p \
                 left join iptp.up_patent_storage ps on ps.patent_id=p.IDPATENT \
-                where ps.storage_id = ? and p.LASTLEGALSTATUS != "无效" \
+                where ps.storage_id = ? and p.LASTLEGALSTATUS = "有效" \
                 order by p.IDPATENT`,
             values: [collegeStorageId]
         }, function (error, result, fields) {
@@ -98,12 +74,12 @@ DBService.prototype.getPatentsOfCollege = function (collegeStorageId) {
 //future_fee
 
 //获取指定patent的future fee记录
-DBService.prototype.getFutureFeeOfPatent = function (patentId) {
-    const connection = this.localConnection;
+DBService.prototype.getFutureFeeOfPatent = function (applyNum) {
+    const connection = this.ipTpConnection;
     return new Promise((resolve, reject) => {
         connection.query({
-            sql: `select * from future_fee where patent_id = ?`,
-            values: [patentId]
+            sql: `select * from zg_future_fee where patent_apply_number = ?`,
+            values: [applyNum]
         }, function (error, result, fields) {
             if (error) {
                 reject(error);
@@ -114,12 +90,12 @@ DBService.prototype.getFutureFeeOfPatent = function (patentId) {
 }
 
 //删除一条指定的future fee记录
-DBService.prototype.deleteFutureFeeOfPatent = function (patentId) {
-    const connection = this.localConnection;
+DBService.prototype.deleteFutureFeeOfPatent = function (applyNum) {
+    const connection = this.ipTpConnection;
     return new Promise((resolve, reject) => {
         connection.query({
-            sql: `delete from future_fee where patent_id = ?`,
-            values: [patentId]
+            sql: `delete from zg_future_fee where patent_apply_number = ?`,
+            values: [applyNum]
         }, function (error, result, fields) {
             if (error) {
                 reject(error);
@@ -130,13 +106,13 @@ DBService.prototype.deleteFutureFeeOfPatent = function (patentId) {
 }
 
 //插入一条专利对应的future fee记录
-DBService.prototype.createPatentFutureFee = function (patentId, patentApplyNumber, patentTitle, futureFees) {
-    const connection = this.localConnection;
+DBService.prototype.createPatentFutureFee = function (patentApplyNumber, patentTitle, futureFees) {
+    const connection = this.ipTpConnection;
     return new Promise((resolve, reject) => {
         const feeString = JSON.stringify(futureFees);
         connection.query({
-            sql: `insert into future_fee (patent_id, patent_apply_number, patent_title, future_fee) values(?, ?, ?, ?)`,
-            values: [patentId, patentApplyNumber, patentTitle, feeString]
+            sql: `insert into zg_future_fee (patent_apply_number, patent_title, future_fee) values(?, ?, ?, ?)`,
+            values: [patentApplyNumber, patentTitle, feeString]
         }, function (error, result, fields) {
             if (error) {
                 reject(error);
@@ -150,16 +126,16 @@ DBService.prototype.createPatentFutureFee = function (patentId, patentApplyNumbe
 
 //获取所有未执行的patent_task
 DBService.prototype.getAllPatentTasks = function () {
-    const connection = this.localConnection;
+    const connection = this.ipTpConnection;
     return new Promise((resolve, reject) => {
         connection.query({
-            sql: `select * from patent_task where is_done = 0`
+            sql: `select * from zg_patent_task where is_done = 0`
         }, function (error, result, fields) {
             if (error) {
                 reject(error);
             }
             const tasks = result.map((task, index) => {
-                return new PatentTask(task["id"], task["patent_id"], task["patent_apply_number"], task["patent_title"], task["is_done"]);
+                return new PatentTask(task["id"], task["patent_apply_number"], task["is_done"]);
             });
             resolve(tasks);
         });
@@ -168,7 +144,7 @@ DBService.prototype.getAllPatentTasks = function () {
 
 //删除所有的patent_task
 DBService.prototype.deleteAllPatentTasks = function () {
-    const connection = this.localConnection;
+    const connection = this.ipTpConnection;
     return new Promise((resolve, reject) => {
         connection.query({
             sql: `TRUNCATE TABLE patent_task`
@@ -183,11 +159,11 @@ DBService.prototype.deleteAllPatentTasks = function () {
 
 //插入一条新patent_task任务记录
 DBService.prototype.createPatentTask = function (patent) {
-    const connection = this.localConnection;
+    const connection = this.ipTpConnection;
     return new Promise((resolve, reject) => {
         connection.query({
-            sql: `insert into patent_task (patent_id, patent_apply_number, patent_title, is_done) values(?, ?, ?, ?)`,
-            values: [patent.id, patent.applyNum, patent.name, 0]
+            sql: `insert into zg_patent_task (patent_apply_number, is_done) values(?, ?)`,
+            values: [patent.applyNum, 0]
         }, function (error, result, fields) {
             if (error) {
                 reject(error);
@@ -199,10 +175,10 @@ DBService.prototype.createPatentTask = function (patent) {
 
 //完成一个patent_task任务
 DBService.prototype.donePatentTask = function (taskId) {
-    const connection = this.localConnection;
+    const connection = this.ipTpConnection;
     return new Promise((resolve, reject) => {
         connection.query({
-            sql: `update patent_task set is_done = 1 where id = ?`,
+            sql: `update zg_patent_task set is_done = 1 where id = ?`,
             values: [taskId]
         }, function (error, result, fields) {
             if (error) {

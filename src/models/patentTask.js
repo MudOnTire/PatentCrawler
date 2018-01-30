@@ -1,9 +1,7 @@
 class PatentTask {
-    constructor(id, patentId, patentApplyNumber, patentTitle, isDone) {
+    constructor(id, patentApplyNumber, isDone) {
         this.id = id;
-        this.patentId = patentId;
         this.patentApplyNumber = patentApplyNumber;
-        this.patentTitle = patentTitle;
         this.isDone = isDone;
     }
 }

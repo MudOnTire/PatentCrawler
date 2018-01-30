@@ -18,7 +18,6 @@ let token = null;
 //生成所有的任务
 async function reGenerateTasks() {
     await dbService.connectIptp();
-    await dbService.connectLocal();
     await dbService.deleteAllPatentTasks();
     let colleges = await dbService.getAllColleges();
     for (let i = 0; i < colleges.length; i++) {
@@ -116,7 +115,7 @@ async function main() {
     let allTasksSuccess = false;
     let shouldSwitchIp = false
     let ip = null;
-    await dbService.connectLocal();
+    await dbService.connectIptp();
     while (!allTasksSuccess) {
         if (shouldSwitchIp) {
             ip = await ipUtil.getIP();
