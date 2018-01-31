@@ -165,6 +165,25 @@ DBService.prototype.getAllPatentTasks = function () {
     });
 }
 
+//根据crawler的序号和，总的crawler的个数返回该crawler需要执行的任务
+DBService.prototype.getPatentTaskForSingleCrawler = function (crawlerIndex, crawlerCount) {
+    const connection = this.localConnection;
+    return new Promise((resolve, reject) => {
+        connection.query({
+            sql: `select * from zg_patent_task pt where mod(pt.id, ?) = ? and is_done = 0`,
+            values: [crawlerCount, crawlerIndex]
+        }, function (error, result, fields) {
+            if (error) {
+                reject(error);
+            }
+            const tasks = result.map((task, index) => {
+                return new PatentTask(task["id"], task["patent_apply_number"], task["is_done"]);
+            });
+            resolve(tasks);
+        });
+    });
+}
+
 //删除所有的patent_task
 DBService.prototype.deleteAllPatentTasks = function () {
     const connection = this.localConnection;
@@ -210,6 +229,24 @@ DBService.prototype.donePatentTask = function (taskId) {
             resolve(result);
         });
     });
+}
+
+//生成所有任务
+DBService.prototype.reGenerateTasks = async function () {
+    const dbService = this;
+    await dbService.connectIptp();
+    await dbService.connectLocal();
+    await dbService.deleteAllPatentTasks();
+    let colleges = await dbService.getAllColleges();
+    for (let i = 0; i < colleges.length; i++) {
+        let college = colleges[i];
+        let patents = await dbService.getPatentsOfCollege(college.storageId);
+        console.log(`${college.name}: ${patents.length} tasks`)
+        for (let j = 0; j < patents.length; j++) {
+            let patent = patents[j];
+            await dbService.createPatentTask(patent);
+        }
+    }
 }
 
 module.exports = DBService;

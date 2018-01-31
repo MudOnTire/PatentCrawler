@@ -1,5 +1,10 @@
 const Nightmare = require('nightmare');
 const urlUtil = require('../utils/urlUtil');
+const patentUtil = require('../utils/patentUtil');
+const imageUtil = require('../utils/imageUtil');
+const DBService = require("../services/dbService");
+const OCRService = require("../services/ocrService");
+const FutureFee = require('../models/futureFee');
 
 const userAgents = ["Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; .NET4.0C; .NET4.0E; rv:11.0) like Gecko",
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.75 Safari/537.36",
@@ -170,7 +175,7 @@ Crawler.prototype.getAuthImage = function (rect) {
                 resolve();
             })
             .then()
-            .catch(()=>{
+            .catch(() => {
                 reject();
             });
     });
@@ -206,6 +211,46 @@ Crawler.prototype.getTokenWithAuthCode = function (code) {
     });
 }
 
+//开始爬取
+Crawler.prototype.startCrawling = async function (crawlerIndex, crawlerCount) {
+    const dbService = new DBService();
+    const crawler = this;
+    dbService.connectLocal();
+    const tasks = await dbService.getPatentTaskForSingleCrawler(crawlerIndex, crawlerCount);
+    for (let i = 0; i < tasks.length; i++) {
+        let task = tasks[i];
+        let applyNumber = patentUtil.getPatentApplyNumber(task.patentApplyNumber);
+        let feeResult = null;
+        try {
+            feeResult = await crawler.getFeeOfPatent(applyNumber, token)
+        } catch (error) {
+            const isDetail = await crawler.isInPatentDetailPage();
+            if (isDetail) {
+                --i;
+                continue;
+            } else {
+                const isExpire = await crawler.isInExpirePage();
+                if (isExpire) {
+                    throw "Token Expired!!!";
+                }
+            }
+        }
+        if (!feeResult) {
+            --i;
+            continue;
+        }
+        const futureFees = feeResult.map((data, index) => {
+            return new FutureFee(data.feeType, data.feeAmount, data.deadline);
+        });
+        await dbService.deleteFutureFeeOfPatent(task.patentApplyNumber);
+        const insertResult = await dbService.createPatentFutureFee(task.patentApplyNumber, futureFees);
+        const updateResult = await dbService.donePatentTask(task.id);
+
+        console.log(task.id);
+    }
+    console.log(`All tasks of crawler${crawlerIndex} done!!!`);
+}
+
 //停止运行
 Crawler.prototype.end = function () {
     const nightmare = this.nightmare;
@@ -219,6 +264,51 @@ Crawler.prototype.end = function () {
                 reject();
             });
     });
+}
+
+//破解进入查询页面, 成功返回true，失败则不断重试
+Crawler.prototype.breakAuth = async function () {
+    const crawler = this;
+    const ocrService = new OCRService();
+    var clipRect = {
+        x: 231,
+        y: 289,
+        width: 50,
+        height: 26
+    };
+    try {
+        await crawler.getAuthImage(clipRect);
+    } catch (error) {
+        return "switchIp";
+    }
+    // const imgInfo = await imageUtil.imageDenoiseAsync("./assets/authCode.png");
+    // console.log(imgInfo);
+    const resultStr = await ocrService.getVerifyCodeResult();
+    const result = JSON.parse(resultStr);
+    console.log(resultStr);
+    const wordsResult = result["words_result"];
+    if (!wordsResult || wordsResult.length === 0) {
+        return false;
+    }
+    let codeText = result.words_result[0].words;
+    const pattern = /.*(\d).*([+-]).*(\d)/;
+    const match = codeText.match(pattern);
+    if (match) {
+        let num1 = Number(match[1]);
+        let operator = match[2];
+        let num2 = Number(match[3]);
+        let answer = (operator === "+" ? num1 + num2 : num1 - num2).toString();
+        try {
+            let tokenResult = await crawler.getTokenWithAuthCode(answer);
+            token = tokenResult;
+            return true;
+        } catch (error) {
+            console.log(`验证失败：${error}`);
+            return false;
+        }
+    } else {
+        return false;
+    }
 }
 
 //测试方法
