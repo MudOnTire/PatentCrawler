@@ -35,9 +35,9 @@ function getRandomIP() {
 function Crawler(ip) {
     this.ip = ip;
     let switches = {};
-    // if (ip) {
-    //     switches["proxy-server"] = ip
-    // }
+    if (ip) {
+        switches["proxy-server"] = ip
+    }
     this.nightmare = Nightmare({
         switches: switches,
         show: true,

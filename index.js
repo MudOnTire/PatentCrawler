@@ -119,9 +119,9 @@ async function main() {
     let ip = null;
     await dbService.connectLocal();
     while (!allTasksSuccess) {
-        // if (shouldSwitchIp) {
-        //     ip = await ipUtil.getIP();
-        // }
+        if (shouldSwitchIp) {
+            ip = await ipUtil.getIP();
+        }
         if (patentCrawler) {
             await patentCrawler.end();
         }
