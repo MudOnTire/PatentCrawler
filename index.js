@@ -15,6 +15,7 @@ async function main(crawlerIndex) {
     while (!allTasksSuccess) {
         if (shouldSwitchIp) {
             ip = await ipUtil.getIP();
+            await crawler.end();
             crawler = new PatentCrawler(ip);
         }
         const breakSuccess = await crawler.breakAuth();
