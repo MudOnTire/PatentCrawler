@@ -2,6 +2,7 @@
 const PatentCrawler = require('./src/services/patentCrawler');
 //uitls
 const ipUtil = require("./src/utils/ipUtil");
+const parallel = require("async/parallel");
 
 let token = null;
 let crawlerCount = 2;
@@ -25,6 +26,7 @@ async function main(crawlerIndex) {
                 allTasksSuccess = true;
             } catch (err) {
                 console.log(err);
+                continue;
             }
             shouldSwitchIp = false;
         } else if (breakSuccess === "switchIp") {
@@ -35,5 +37,13 @@ async function main(crawlerIndex) {
     }
 }
 
-main(0);
-main(1);
+let crawlerTasks = [];
+
+for (let i = 0; i < crawlerCount; i++) {
+    let crawlerTask = async function () {
+        await main(i);
+    };
+    crawlerTasks.push(crawlerTask);
+}
+
+parallel(crawlerTasks);

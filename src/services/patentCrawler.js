@@ -1,7 +1,7 @@
 const Nightmare = require('nightmare');
 const urlUtil = require('../utils/urlUtil');
 const patentUtil = require('../utils/patentUtil');
-const imageUtil = require('../utils/imageUtil');
+// const imageUtil = require('../utils/imageUtil');
 const DBService = require("../services/dbService");
 const OCRService = require("../services/ocrService");
 const FutureFee = require('../models/futureFee');
