@@ -54,9 +54,9 @@ function Crawler(ip) {
 }
 
 //爬取指定专利的年费信息
-Crawler.prototype.getFeeOfPatent = function (applyNumber) {
+Crawler.prototype.getFeeOfPatent = function (applyNumber, token) {
     const crawler = this;
-    const url = urlUtil.createUrl(applyNumber, crawler.token);
+    const url = urlUtil.createUrl(applyNumber, token);
     const nightmare = this.nightmare;
     return new Promise((resolve, reject) => {
         nightmare
@@ -213,7 +213,7 @@ Crawler.prototype.getTokenWithAuthCode = function (code) {
 }
 
 //开始爬取
-Crawler.prototype.startCrawling = async function (crawlerIndex, crawlerCount) {
+Crawler.prototype.startCrawling = async function (crawlerIndex, crawlerCount, token) {
     const dbService = new DBService();
     const crawler = this;
     dbService.connectLocal();
@@ -223,7 +223,7 @@ Crawler.prototype.startCrawling = async function (crawlerIndex, crawlerCount) {
         let applyNumber = patentUtil.getPatentApplyNumber(task.patentApplyNumber);
         let feeResult = null;
         try {
-            feeResult = await crawler.getFeeOfPatent(applyNumber)
+            feeResult = await crawler.getFeeOfPatent(applyNumber, token);
         } catch (error) {
             const isDetail = await crawler.isInPatentDetailPage();
             if (isDetail) {
