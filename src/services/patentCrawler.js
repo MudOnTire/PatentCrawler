@@ -46,16 +46,17 @@ function Crawler(ip) {
     this.nightmare = Nightmare({
         switches: switches,
         show: true,
-        gotoTimeout: 10000,
-        loadTimeout: 10000,
-        waitTimeout: 10000,
-        executionTimeout: 10000
+        gotoTimeout: 20000,
+        loadTimeout: 20000,
+        waitTimeout: 20000,
+        executionTimeout: 20000
     }).viewport(1024, 1000);
 }
 
 //爬取指定专利的年费信息
-Crawler.prototype.getFeeOfPatent = function (applyNumber, token) {
-    const url = urlUtil.createUrl(applyNumber, token);
+Crawler.prototype.getFeeOfPatent = function (applyNumber) {
+    const crawler = this;
+    const url = urlUtil.createUrl(applyNumber, crawler.token);
     const nightmare = this.nightmare;
     return new Promise((resolve, reject) => {
         nightmare
@@ -222,11 +223,12 @@ Crawler.prototype.startCrawling = async function (crawlerIndex, crawlerCount) {
         let applyNumber = patentUtil.getPatentApplyNumber(task.patentApplyNumber);
         let feeResult = null;
         try {
-            feeResult = await crawler.getFeeOfPatent(applyNumber, token)
+            feeResult = await crawler.getFeeOfPatent(applyNumber)
         } catch (error) {
             const isDetail = await crawler.isInPatentDetailPage();
             if (isDetail) {
                 --i;
+                await crawler.reloadPage();
                 continue;
             } else {
                 const isExpire = await crawler.isInExpirePage();
@@ -237,6 +239,7 @@ Crawler.prototype.startCrawling = async function (crawlerIndex, crawlerCount) {
         }
         if (!feeResult) {
             --i;
+            await crawler.reloadPage();
             continue;
         }
         const futureFees = feeResult.map((data, index) => {
@@ -264,6 +267,21 @@ Crawler.prototype.end = function () {
                 reject();
             });
     });
+}
+
+//刷新当前页面
+Crawler.prototype.reloadPage = function () {
+    const nightmare = this.nightmare;
+    return new Promise((resolve, reject) => {
+        nightmare
+            .refresh()
+            .then(() => {
+                resolve();
+            })
+            .catch(() => {
+                reject();
+            });
+    })
 }
 
 //破解进入查询页面, 成功返回true，失败则不断重试
@@ -300,7 +318,7 @@ Crawler.prototype.breakAuth = async function () {
         let answer = (operator === "+" ? num1 + num2 : num1 - num2).toString();
         try {
             let tokenResult = await crawler.getTokenWithAuthCode(answer);
-            token = tokenResult;
+            crawler.token = tokenResult
             return true;
         } catch (error) {
             console.log(`验证失败：${error}`);

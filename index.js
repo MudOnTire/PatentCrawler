@@ -4,7 +4,6 @@ const PatentCrawler = require('./src/services/patentCrawler');
 const ipUtil = require("./src/utils/ipUtil");
 const parallel = require("async/parallel");
 
-let token = null;
 let crawlerCount = 2;
 
 //主函数
