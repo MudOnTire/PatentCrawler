@@ -46,10 +46,10 @@ function Crawler(ip) {
     this.nightmare = Nightmare({
         switches: switches,
         show: true,
-        gotoTimeout: 20000,
-        loadTimeout: 20000,
-        waitTimeout: 20000,
-        executionTimeout: 20000
+        gotoTimeout: 10000,
+        loadTimeout: 10000,
+        waitTimeout: 10000,
+        executionTimeout: 10000
     }).viewport(1024, 1000);
 }
 
