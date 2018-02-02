@@ -295,7 +295,7 @@ Crawler.prototype.breakAuth = async function () {
     try {
         await crawler.getAuthImage(clipRect);
     } catch (error) {
-        return "switchIp";
+        return false;
     }
     // const imgInfo = await imageUtil.imageDenoiseAsync("./assets/authCode.png");
     // console.log(imgInfo);

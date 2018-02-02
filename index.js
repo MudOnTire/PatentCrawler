@@ -1,3 +1,4 @@
+const http = require("http");
 //services
 const PatentCrawler = require('./src/services/patentCrawler');
 //uitls
@@ -13,14 +14,41 @@ let token = null;
 const dbService = new DBService();
 dbService.connectLocal();
 
+
+async function testConnect() {
+    return new Promise((resolve, reject) => {
+        http.get("http://cpquery.sipo.gov.cn/txnPantentInfoList.do", (res) => {
+            if (res.statusCode == 200) {
+                let rawData = '';
+                res.on('data', (chunk) => { rawData += chunk; });
+                res.on('end', () => {
+                    if(rawData.length<=0){
+                        resolve(false);
+                    }else{
+                        resolve(true);
+                    }
+                });
+            } else {
+                resolve(false);
+            }
+        }).on('error', (e) => {
+            resolve(false);
+        });
+    });
+}
+
 async function prepare() {
     while (token === null) {
+        let connectable = await testConnect();
+        if (connectable) {
+            ip = null;
+        } else {
+            ip = await ipUtil.getIP();
+        }
         let tokenCrawler = new PatentCrawler(ip);
         const breakSuccess = await tokenCrawler.breakAuth();
         if (breakSuccess === true) {
             token = tokenCrawler.token;
-        } else if (breakSuccess === "switchIp") {
-            ip = await ipUtil.getIP();
         }
         await tokenCrawler.end();
     }
