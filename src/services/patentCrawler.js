@@ -2,7 +2,6 @@ const Nightmare = require('nightmare');
 const urlUtil = require('../utils/urlUtil');
 const patentUtil = require('../utils/patentUtil');
 // const imageUtil = require('../utils/imageUtil');
-const DBService = require("../services/dbService");
 const OCRService = require("../services/ocrService");
 const FutureFee = require('../models/futureFee');
 
@@ -46,10 +45,10 @@ function Crawler(ip) {
     this.nightmare = Nightmare({
         switches: switches,
         show: true,
-        gotoTimeout: 10000,
-        loadTimeout: 10000,
-        waitTimeout: 10000,
-        executionTimeout: 10000
+        gotoTimeout: 20000,
+        loadTimeout: 20000,
+        waitTimeout: 20000,
+        executionTimeout: 20000
     }).viewport(1024, 1000);
 }
 
@@ -213,42 +212,41 @@ Crawler.prototype.getTokenWithAuthCode = function (code) {
 }
 
 //开始爬取
-Crawler.prototype.startCrawling = async function (crawlerIndex, crawlerCount, token) {
-    const dbService = new DBService();
+Crawler.prototype.startCrawling = async function (crawlerIndex, crawlerCount, token, dbService) {
     const crawler = this;
-    dbService.connectLocal();
     const tasks = await dbService.getPatentTaskForSingleCrawler(crawlerIndex, crawlerCount);
     for (let i = 0; i < tasks.length; i++) {
         let task = tasks[i];
         let applyNumber = patentUtil.getPatentApplyNumber(task.patentApplyNumber);
         let feeResult = null;
-        try {
-            feeResult = await crawler.getFeeOfPatent(applyNumber, token);
-        } catch (error) {
-            const isDetail = await crawler.isInPatentDetailPage();
-            if (isDetail) {
-                --i;
-                await crawler.reloadPage();
-                continue;
-            } else {
-                const isExpire = await crawler.isInExpirePage();
-                if (isExpire) {
-                    throw "Token Expired!!!";
-                }
-            }
-        }
+        // try {
+        //     feeResult = await crawler.getFeeOfPatent(applyNumber, token);
+        // } catch (error) {
+        //     console.log(`crawler${crawlerIndex} got error!!!`);
+        //     console.log(error);
+        //     const isDetail = await crawler.isInPatentDetailPage();
+        //     if (isDetail) {
+        //         i -= 2;
+        //         continue;
+        //     } else {
+        //         const isExpire = await crawler.isInExpirePage();
+        //         if (isExpire) {
+        //             throw "Token Expired!!!";
+        //         }
+        //     }
+        // }
+        feeResult = await crawler.getFeeOfPatent(applyNumber, token);
         if (!feeResult) {
-            --i;
-            await crawler.reloadPage();
+            console.log(`crawler${crawlerIndex} has null feeResult!!!`);
+            i -= 2;
             continue;
         }
         const futureFees = feeResult.map((data, index) => {
             return new FutureFee(data.feeType, data.feeAmount, data.deadline);
         });
         await dbService.deleteFutureFeeOfPatent(task.patentApplyNumber);
-        const insertResult = await dbService.createPatentFutureFee(task.patentApplyNumber, futureFees);
-        const updateResult = await dbService.donePatentTask(task.id);
-
+        await dbService.createPatentFutureFee(task.patentApplyNumber, futureFees);
+        await dbService.donePatentTask(task.id);
         console.log(task.id);
     }
     console.log(`All tasks of crawler${crawlerIndex} done!!!`);

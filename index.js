@@ -4,11 +4,15 @@ const PatentCrawler = require('./src/services/patentCrawler');
 const ipUtil = require("./src/utils/ipUtil");
 const parallel = require("async/parallel");
 const reflectAll = require('async/reflectAll');
+const DBService = require("./src/services/dbService");
 
 let crawlerCount = 5;
-
 let ip = null;
 let token = null;
+
+const dbService = new DBService();
+dbService.connectLocal();
+
 async function prepare() {
     while (token === null) {
         let tokenCrawler = new PatentCrawler(ip);
@@ -29,7 +33,7 @@ async function start() {
         let crawlerTask = async function (done) {
             const patentCrawler = new PatentCrawler(ip);
             try {
-                await patentCrawler.startCrawling(crawlerIndex, crawlerCount, token);
+                await patentCrawler.startCrawling(crawlerIndex, crawlerCount, token, dbService);
                 done(null, 'success');
             } catch (error) {
                 console.log(`crawl${crawlerIndex} failed!!!`);
