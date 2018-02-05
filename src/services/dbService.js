@@ -47,39 +47,6 @@ DBService.prototype.getFutureFeeOfPatent = function (applyNum) {
     });
 }
 
-//删除一条指定的future fee记录
-DBService.prototype.deleteFutureFeeOfPatent = function (applyNum) {
-    const connection = this.connection;
-    return new Promise((resolve, reject) => {
-        connection.query({
-            sql: `delete from ${feeTableName} where an = ?`,
-            values: [applyNum]
-        }, function (error, result, fields) {
-            if (error) {
-                reject(error);
-            }
-            resolve(result);
-        })
-    });
-}
-
-//插入一条专利对应的future fee记录
-DBService.prototype.createPatentFutureFee = function (an, futureFees) {
-    const connection = this.connection;
-    return new Promise((resolve, reject) => {
-        const feeString = JSON.stringify(futureFees);
-        connection.query({
-            sql: `insert into ${feeTableName} (an, fees) values(?, ?)`,
-            values: [an, feeString]
-        }, function (error, result, fields) {
-            if (error) {
-                reject(error);
-            }
-            resolve(result);
-        });
-    });
-}
-
 //patent_task
 
 //获取所有未执行的patent_task
@@ -135,17 +102,51 @@ DBService.prototype.deleteAllPatentTasks = function () {
 }
 
 //完成一个patent_task任务
-DBService.prototype.donePatentTask = function (taskId) {
+DBService.prototype.donePatentTask = function (task, futureFees) {
     const connection = this.connection;
     return new Promise((resolve, reject) => {
-        connection.query({
-            sql: `update ${taskTableName} set status = 1 where id = ?`,
-            values: [taskId]
-        }, function (error, result, fields) {
-            if (error) {
-                reject(error);
+        connection.beginTransaction(function (err) {
+            if (err) {
+                throw err;
             }
-            resolve(result);
+            connection.query({
+                sql: `delete from ${feeTableName} where an = ?`,
+                values: [task.patentApplyNumber]
+            }, function (error, result, fields) {
+                if (error) {
+                    return connection.rollback(function () {
+                        reject(error);
+                    });
+                }
+                connection.query({
+                    sql: `insert into ${feeTableName} (an, fees) values(?, ?)`,
+                    values: [task.patentApplyNumber, futureFees]
+                }, function (error, result, fields) {
+                    if (error) {
+                        return connection.rollback(function () {
+                            reject(error);
+                        });
+                    }
+                    connection.query({
+                        sql: `update ${taskTableName} set status = 1 where id = ?`,
+                        values: [task.id]
+                    }, function (error, results, fields) {
+                        if (error) {
+                            return connection.rollback(function () {
+                                reject(error);
+                            });
+                        }
+                        connection.commit(function (err) {
+                            if (err) {
+                                return connection.rollback(function () {
+                                    reject(err);
+                                });
+                            }
+                            resolve();
+                        });
+                    });
+                });
+            });
         });
     });
 }

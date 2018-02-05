@@ -14,7 +14,8 @@ const userAgents = ["Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; .NET4.0C;
     "Opera/9.80 (Windows NT 6.1; U; zh-cn) Presto/2.9.168 Version/11.50",
     "Mozilla/5.0 (Windows; U; Windows NT 6.1; ) AppleWebKit/534.12 (KHTML, like Gecko) Maxthon/3.0 Safari/534.12",
     "Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.1; WOW64; Trident/5.0;  SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET CLR 3.0.30729; Media Center PC 6.0; InfoPath.3; .NET4.0C; .NET4.0E; SE 2.X MetaSr 1.0)",
-    "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/535.1 (KHTML, like Gecko) Chrome/13.0.782.41 Safari/535.1 QQBrowser/6.9.11079.201"];
+    "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/535.1 (KHTML, like Gecko) Chrome/13.0.782.41 Safari/535.1 QQBrowser/6.9.11079.201"
+];
 
 // min =< result < max
 function getRandomInt(min, max) {
@@ -60,7 +61,9 @@ Crawler.prototype.getFeeOfPatent = function (applyNumber, token) {
     return new Promise((resolve, reject) => {
         nightmare
             .useragent(getRandomUserAgent())
-            .goto(url, { "X-Forwarded-For": getRandomIP() })
+            .goto(url, {
+                "X-Forwarded-For": getRandomIP()
+            })
             .wait("#djfid")
             .wait(getRandomInt(200, 500))
             .evaluate(() => {
@@ -74,7 +77,11 @@ Crawler.prototype.getFeeOfPatent = function (applyNumber, token) {
                         const feeType = tds[0].querySelector(spanSelector).title;
                         const feeAmount = tds[1].querySelector(spanSelector).title;
                         const deadline = tds[2].querySelector(spanSelector).title;
-                        futureFees.push({ feeType: feeType, feeAmount: feeAmount, deadline: deadline });
+                        futureFees.push({
+                            feeType: feeType,
+                            feeAmount: feeAmount,
+                            deadline: deadline
+                        });
                     }
                 }
                 return futureFees;
@@ -244,10 +251,12 @@ Crawler.prototype.startCrawling = async function (crawlerIndex, crawlerCount, to
         const futureFees = feeResult.map((data, index) => {
             return new FutureFee(data.feeType, data.feeAmount, data.deadline);
         });
-        await dbService.deleteFutureFeeOfPatent(task.patentApplyNumber);
-        await dbService.createPatentFutureFee(task.patentApplyNumber, futureFees);
-        await dbService.donePatentTask(task.id);
-        console.log(task.id);
+        try {
+            await dbService.donePatentTask(task, JSON.stringify(futureFees));
+            console.log(task.id);
+        } catch (err) {
+            console.log(err);
+        }
     }
     console.log(`All tasks of crawler${crawlerIndex} done!!!`);
 }
