@@ -19,6 +19,13 @@ function DBService() {
         password: 'Cnuip1109',
         database: 'patentfee'
     });
+    this.propConnection = mysql.createConnection({
+        host: '192.168.20.9',
+        port: '3306',
+        user: 'zgroot',
+        password: 'Zgroot123#',
+        database: 'eip_zg'
+    })
 }
 
 //连接中高平台数据库
@@ -48,6 +55,22 @@ DBService.prototype.connectLocal = function () {
                 return;
             }
             console.log("connected to local mysql!");
+            resolve();
+        });
+    });
+}
+
+//连接本生产环境数据库
+DBService.prototype.connectProd = function () {
+    const connection = this.propConnection;
+    return new Promise((resolve, reject) => {
+        connection.connect(function (err) {
+            if (err) {
+                console.error("local error connection: " + err.stack);
+                reject();
+                return;
+            }
+            console.log("connected to production mysql!");
             resolve();
         });
     });
@@ -245,6 +268,67 @@ DBService.prototype.reGenerateTasks = async function () {
         for (let j = 0; j < patents.length; j++) {
             let patent = patents[j];
             await dbService.createPatentTask(patent);
+        }
+    }
+}
+
+//获取所有专利申请号
+DBService.prototype.getAllPatentANs = function () {
+    const connection = this.propConnection;
+    return new Promise((resolve, reject) => {
+        connection.query({
+            sql: 'select AN from st_patentinfo_sub1'
+        }, function (error, result, fields) {
+            if (error) {
+                reject(error);
+            }
+            resolve(result);
+        });
+    })
+}
+
+//获取所有已有专利任务的申请号
+DBService.prototype.getAllTaskANs = function () {
+    const connection = this.localConnection;
+    return new Promise((resolve, reject) => {
+        connection.query({
+            sql: 'select patent_apply_number from zg_patent_task'
+        }, function (error, result, fields) {
+            if (error) {
+                reject(error);
+            }
+            resolve(result);
+        });
+    })
+}
+
+//插入一条任务
+DBService.prototype.insertTask = function (patentAN) {
+    const connection = this.localConnection;
+    return new Promise((resolve, reject) => {
+        connection.query({
+            sql: `insert into zg_patent_task (patent_apply_number, is_done) values(?, ?)`,
+            values: [patentAN, 0]
+        }, function (error, result, fields) {
+            if (error) {
+                reject(error);
+            }
+            resolve(result);
+        });
+    });
+}
+
+//生成任务
+DBService.prototype.generateTasks = async function () {
+    const dbService = this;
+    await dbService.connectProd();
+    await dbService.connectLocal();
+    const allANs = await dbService.getAllPatentANs();
+    const taskANs = await dbService.getAllTaskANs();
+    for (let i = 0; i < allANs.length; i++) {
+        let an = allANs[i];
+        if (taskANs.indexOf(an) < 0) {
+            await insertTask(an);
         }
     }
 }
