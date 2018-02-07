@@ -7,7 +7,7 @@ const parallel = require("async/parallel");
 const reflectAll = require('async/reflectAll');
 const DBService = require("./src/services/dbService");
 
-let crawlerCount = 1;
+let crawlerCount = 4;
 let ip = null;
 let token = null;
 

@@ -3,6 +3,7 @@ const College = require("../models/college");
 const Patent = require("../models/patent");
 const PatentTask = require("../models/patentTask");
 const config = require("../../config");
+const dateFormat = require('date-format');
 
 const feeTableName = "patent_fee_future";
 const taskTableName = "patent_fee_future_task";
@@ -119,8 +120,8 @@ DBService.prototype.donePatentTask = function (task, futureFees) {
                     });
                 }
                 connection.query({
-                    sql: `insert into ${feeTableName} (an, fees) values(?, ?)`,
-                    values: [task.patentApplyNumber, futureFees]
+                    sql: `insert into ${feeTableName} (an, fees, status, update_time) values(?, ?, ?, ?)`,
+                    values: [task.patentApplyNumber, futureFees, 1, dateFormat.asString('yyyy-MM-dd hh:mm:ss', new Date())]
                 }, function (error, result, fields) {
                     if (error) {
                         return connection.rollback(function () {
