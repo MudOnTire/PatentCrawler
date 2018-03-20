@@ -121,7 +121,7 @@ DBService.prototype.donePatentTask = function (task, futureFees) {
                 }
                 connection.query({
                     sql: `insert into ${feeTableName} (an, fees, status, update_time) values(?, ?, ?, ?)`,
-                    values: [task.patentApplyNumber, futureFees, 1, dateFormat.asString('yyyy-MM-dd hh:mm:ss', new Date())]
+                    values: [task.patentApplyNumber, futureFees, 0, dateFormat.asString('yyyy-MM-dd hh:mm:ss', new Date())]
                 }, function (error, result, fields) {
                     if (error) {
                         return connection.rollback(function () {
